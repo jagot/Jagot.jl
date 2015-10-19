@@ -1,5 +1,7 @@
 module Jagot
 
-# package code goes here
+include("plotting.jl")
+
+export plotting
 
 end # module
