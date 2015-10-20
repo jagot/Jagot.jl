@@ -35,4 +35,15 @@ end
 @define_colormap(plasma)
 @define_colormap(viridis)
 
+function get_cmap(args...)
+    plt[:cm][:get_cmap](args...)
+end
+
+import Base.call
+function call(cmap::PyPlot.ColorMap, i::Int)
+    pycall(cmap, PyAny, i)
+end
+
+export get_cmap, call
+
 end
