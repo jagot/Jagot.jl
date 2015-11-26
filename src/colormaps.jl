@@ -19,29 +19,31 @@ using PyCall
 using PyPlot
 @pyimport matplotlib.colors as COL
 
-include("colormaps_data.jl")
-
-macro define_colormap(name)
-    name_str = string(name)
-    data_sym = symbol("_$(name)_data")
-    eval(quote
-        const $name = COL.ListedColormap($data_sym, name=$name_str)
-        export $name
-    end)
-end
-
-@define_colormap(magma)
-@define_colormap(inferno)
-@define_colormap(plasma)
-@define_colormap(viridis)
-
 function get_cmap(args...)
     plt[:cm][:get_cmap](args...)
 end
 
 import Base.call
 function call(cmap::PyPlot.ColorMap, i::Int)
-    pycall(cmap, PyAny, i)
+    if :colors in keys(cmap)
+        vec(cmap[:colors][i,:])
+    else
+        pycall(cmap, PyAny, i)
+    end
+end
+
+function lerp(a,b,t)
+    (1-t)*a + t*b
+end
+
+function lerp(a::Tuple, b::Tuple, t)
+    tuple([lerp(a[i],b[i],t) for i = 1:length(a)]...)
+end
+
+function call(cmap::PyPlot.ColorMap, f::Real)
+    i = clamp(1+f*(cmap[:N]-1),1,cmap[:N])
+    fl,ce = floor(Integer,i), ceil(Integer, i)
+    lerp(cmap(fl),cmap(ce),f)
 end
 
 export get_cmap, call
