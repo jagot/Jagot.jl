@@ -1,5 +1,7 @@
 module plotting
 using PyPlot
+using PyCall
+@pyimport matplotlib.colors as COL
 
 include("colormaps.jl")
 
@@ -10,8 +12,11 @@ function plot_map(args...; kwargs...)
             push!(kwargs, (key, val))
         end
     end
-    push_default!(:cmap, plotting.get_cmap("viridis"))
+    push_default!(:cmap, get_cmap("viridis"))
     push_default!(:rasterized, true)
+    if (i = findfirst(keys, :norm)) != 0 && kwargs[i][2] == :log
+        kwargs[i] = (:norm, COL.LogNorm())
+    end
     p = pcolormesh(args...; kwargs...)
     margins(0,0)
     p
