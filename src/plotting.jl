@@ -17,11 +17,24 @@ function plot_map(args...; kwargs...)
     p
 end
 
-function set_times_new_roman()
-    rc("font";
-       family = "serif",
-       serif = "Times New Roman",
-       weight = "regular")
+function set_font(; kwargs...)
+    keys = map(first, kwargs)
+
+    if :serif in keys
+        push!(kwargs, (:family, "serif"))
+    elseif :sans_serif in keys
+        push!(kwargs, (:family, "sans-serif"))
+    end
+
+    for i in eachindex(kwargs)
+        kwargs[i] = (symbol(replace(string(kwargs[i][1]), "_", "-")), kwargs[i][2])
+    end
+
+    rc("font"; kwargs...)
+end
+
+function set_times_new_roman(; kwargs...)
+    set_font(serif = "Times New Roman", kwargs...)
     rc("mathtext";
        rm = "serif",
        it = "serif:italic",
@@ -30,5 +43,6 @@ function set_times_new_roman()
 end
 
 export colormaps, plot_map, set_times_new_roman
+export colormaps, plot_map, set_font, set_times_new_roman
 
 end
