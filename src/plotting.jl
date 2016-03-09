@@ -5,6 +5,10 @@ using PyCall
 
 include("colormaps.jl")
 
+function filter_kwargs(kwargs, sym)
+    filter!(f -> f[1] != sym, kwargs)
+end
+
 function plot_map(args...; kwargs...)
     keys = map(first,kwargs)
     function push_default!(key, val)
@@ -16,6 +20,17 @@ function plot_map(args...; kwargs...)
     push_default!(:rasterized, true)
     if (i = findfirst(keys, :norm)) != 0 && kwargs[i][2] == :log
         kwargs[i] = (:norm, COL.LogNorm())
+    end
+    if (i = findfirst(keys, :align_ticks)) != 0 && (aw=kwargs[i][2]) != false && length(args) >= 3
+        kwargs = filter_kwargs(kwargs, :align_ticks)
+        x,y,z = args
+        if aw != :y
+            x -= (x[2]-x[1])/2
+        end
+        if aw != :x
+            y -= (y[2]-y[1])/2
+        end
+        args = (x,y,z)
     end
     p = pcolormesh(args...; kwargs...)
     margins(0,0)
