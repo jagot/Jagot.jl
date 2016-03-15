@@ -54,7 +54,7 @@ function set_font(; kwargs...)
 end
 
 function set_times_new_roman(; kwargs...)
-    set_font(serif = "Times New Roman", kwargs...)
+    set_font(serif = "Times New Roman"; kwargs...)
     rc("mathtext";
        rm = "serif",
        it = "serif:italic",
