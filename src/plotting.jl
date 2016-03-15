@@ -17,6 +17,9 @@ function plot_map(args...; kwargs...)
         end
     end
     push_default!(:cmap, get_cmap("viridis"))
+    if (i = findfirst(keys, :cmap)) != 0 && typeof(kwargs[i][2]) <: AbstractString
+        kwargs[i] = (:cmap, get_cmap(kwargs[i][2]))
+    end
     push_default!(:rasterized, true)
     if (i = findfirst(keys, :norm)) != 0 && kwargs[i][2] == :log
         kwargs[i] = (:norm, COL.LogNorm())
