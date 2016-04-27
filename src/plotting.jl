@@ -77,6 +77,19 @@ function set_times_new_roman(; kwargs...)
        fontset = "stix")
 end
 
+function set_latex_serif(; kwargs...)
+    rc("text";
+       usetex = true)
+    rc("font";
+       family = "serif")
+    rc("mathtext";
+       rm = "serif",
+       it = "serif:italic",
+       bf = "serif:bold",
+       fontset = "cm")
+    set_font(; kwargs...)
+end
+
 function latex_base10(v)
     if v==0
         return "0"
@@ -155,7 +168,7 @@ function square_axs()
 end
 
 export colormaps, plot_map, plot_polar_map,
-set_font, set_times_new_roman,
+set_font, set_times_new_roman, set_latex_serif,
 latex_base10, base10,
 axis_add_ticks, set_ticklabel_props, π_labels,
 pyslice, square_axs
