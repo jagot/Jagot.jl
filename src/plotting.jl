@@ -2,6 +2,7 @@ module plotting
 using PyPlot
 using PyCall
 @pyimport matplotlib.colors as COL
+using SuperSub
 
 include("colormaps.jl")
 
@@ -80,10 +81,32 @@ function latex_base10(v)
     if v==0
         return "0"
     end
-    ex = floor(log10(v))
+    ex = floor(log10(abs(v)))
     v /= 10^ex
-    @sprintf("%0.3f\\cdot10^{%i}",v,ex)
+    if ex == 0
+        @sprintf("%0.7f",v)
+    elseif ex == 1
+        @sprintf("%0.7f\\cdot10",v)
+    else
+        @sprintf("%0.7f\\cdot10^{%i}",v,ex)
+    end
 end
+latex_base10(v::Vector) = map(latex_base10, v)
+
+function base10(v)
+    if v==0
+        return "0"
+    end
+    ex = floor(log10(abs(v)))
+    v /= 10^ex
+    ex = floor(Int, ex)
+    if v==1
+        @sprintf("10%s",superscript(ex))
+    else
+        @sprintf("%0.3f×10%s",v,superscript(ex))
+    end
+end
+base10(v::Vector) = map(base10, v)
 
 function axis_add_ticks(ticks, labels, ax = :x)
     a = gca()
@@ -94,6 +117,6 @@ function axis_add_ticks(ticks, labels, ax = :x)
     sca(a)
 end
 
-export colormaps, plot_map, plot_polar_map, set_font, set_times_new_roman, latex_base10, axis_add_ticks
+export colormaps, plot_map, plot_polar_map, set_font, set_times_new_roman, latex_base10, base10, axis_add_ticks
 
 end
