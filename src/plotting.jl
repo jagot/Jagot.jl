@@ -108,15 +108,20 @@ function base10(v)
 end
 base10(v::Vector) = map(base10, v)
 
-function axis_add_ticks(ticks, labels, ax = :x)
+function axis_add_ticks(ticks, labels, ax = :x; kwargs...)
     a = gca()
     a2 = a[ax == :x ? :twiny : :twinx]()
     a2[ax == :x ? :set_xlim : :set_ylim](a[ax == :x ? :get_xlim : :get_ylim]())
     a2[ax == :x ? :set_xticks : :set_yticks](collect(ticks))
-    a2[ax == :x ? :set_xticklabels : :set_yticklabels](collect(labels))
+    a2[ax == :x ? :set_xticklabels : :set_yticklabels](collect(labels); kwargs...)
     sca(a)
 end
 
-export colormaps, plot_map, plot_polar_map, set_font, set_times_new_roman, latex_base10, base10, axis_add_ticks
+function set_ticklabel_props(ax=:x; kwargs...)
+    labels = gca()[ax == :x ? :get_xticklabels : :get_yticklabels]()
+    setp(labels; kwargs...)
+end
+
+export colormaps, plot_map, plot_polar_map, set_font, set_times_new_roman, latex_base10, base10, axis_add_ticks, set_ticklabel_props
 
 end
