@@ -122,6 +122,31 @@ function set_ticklabel_props(ax=:x; kwargs...)
     setp(labels; kwargs...)
 end
 
-export colormaps, plot_map, plot_polar_map, set_font, set_times_new_roman, latex_base10, base10, axis_add_ticks, set_ticklabel_props
+function π_labels(ax = :x, max_count = 10)
+    lims = gca()[ax == :x ? :get_xlim : :get_ylim]()
+    f = 2
+    mi,ma = map(l -> trunc(Int, l/(π/2)), lims)
+    if ma-mi > max_count
+        f = 1
+        mi,ma = map(l -> trunc(Int, l/π), lims)
+    end
+    d = round(Int, max((ma-mi)/max_count,1))
+    r = mi:d:ma
+    gca()[ax == :x ? :set_xticks : :set_yticks](collect(r)*π/f)
+    div = f == 2 ? "/2" : ""
+    gca()[ax == :x ? :set_xticklabels : :set_yticklabels](map(r) do i
+                                                          if i == 0
+                                                          0
+                                                          elseif i == 1
+                                                          "π$div"
+                                                          elseif i == -1
+                                                          "-π$div"
+                                                          else
+                                                          "$(i)π$div"
+                                                          end
+                                                          end)
+end
+
+export colormaps, plot_map, plot_polar_map, set_font, set_times_new_roman, latex_base10, base10, axis_add_ticks, set_ticklabel_props, π_labels
 
 end
