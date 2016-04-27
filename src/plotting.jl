@@ -90,6 +90,12 @@ function set_latex_serif(; kwargs...)
     set_font(; kwargs...)
 end
 
+function latex(o)
+    io = IOBuffer()
+    writemime(io, MIME"text/latex"(), o)
+    takebuf_string(io)
+end
+
 function latex_base10(v)
     if v==0
         return "0"
@@ -169,7 +175,7 @@ end
 
 export colormaps, plot_map, plot_polar_map,
 set_font, set_times_new_roman, set_latex_serif,
-latex_base10, base10,
+latex, latex_base10, base10,
 axis_add_ticks, set_ticklabel_props, π_labels,
 pyslice, square_axs
 
