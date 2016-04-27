@@ -147,6 +147,17 @@ function π_labels(ax = :x, max_count = 10)
                                                           end)
 end
 
-export colormaps, plot_map, plot_polar_map, set_font, set_times_new_roman, latex_base10, base10, axis_add_ticks, set_ticklabel_props, π_labels
+pyslice(args...) = pycall(pybuiltin("slice"), PyObject, args...)
+
+function square_axs()
+    gca()[:set_aspect]("equal")
+    gca()[:autoscale](tight=true)
+end
+
+export colormaps, plot_map, plot_polar_map,
+set_font, set_times_new_roman,
+latex_base10, base10,
+axis_add_ticks, set_ticklabel_props, π_labels,
+pyslice, square_axs
 
 end
