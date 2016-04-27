@@ -40,6 +40,17 @@ function plot_map(args...; kwargs...)
     p
 end
 
+function plot_polar_map(r::AbstractVector, v::AbstractVector, nφ,
+                        args...; kwargs...)
+    φ = linspace(0,2π,nφ)
+    R = repmat(r,1,nφ)
+    Φ = repmat(φ',length(r),1)
+    X = R.*cos(Φ)
+    Y = R.*sin(Φ)
+    V = repmat(v,1,nφ)
+    plot_map(X,Y,V, args...; kwargs...)
+end
+
 function set_font(; kwargs...)
     keys = map(first, kwargs)
 
@@ -83,6 +94,6 @@ function axis_add_ticks(ticks, labels, ax = :x)
     sca(a)
 end
 
-export colormaps, plot_map, set_font, set_times_new_roman, latex_base10, axis_add_ticks
+export colormaps, plot_map, plot_polar_map, set_font, set_times_new_roman, latex_base10, axis_add_ticks
 
 end
