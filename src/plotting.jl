@@ -174,10 +174,16 @@ function square_axs()
     gca()[:autoscale](tight=true)
 end
 
+function savefig_f(filename, args...; kwargs...)
+    savefig(filename, args...; kwargs...)
+    filename
+end
+
 export colormaps, plot_map, plot_polar_map,
 set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
 axis_add_ticks, set_ticklabel_props, π_labels,
-pyslice, square_axs
+pyslice, square_axs,
+savefig_f
 
 end
