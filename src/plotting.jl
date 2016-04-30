@@ -2,6 +2,7 @@ module plotting
 using PyPlot
 using PyCall
 @pyimport matplotlib.colors as COL
+@pyimport numpy.ma as masked_array
 using SuperSub
 
 include("colormaps.jl")
@@ -50,6 +51,13 @@ function plot_polar_map(r::AbstractVector, v::AbstractVector, nφ,
     Y = R.*sin(Φ)
     V = repmat(v,1,nφ)
     plot_map(X,Y,V, args...; kwargs...)
+end
+
+function plot_matrix(a, args...; kwargs...)
+    aa = pycall(masked_array.masked_equal, Any, full(a), 0)
+    plot_map(aa, args...; kwargs...)
+    gca()[:invert_yaxis]()
+    square_axs()
 end
 
 function set_font(; kwargs...)
@@ -179,7 +187,8 @@ function savefig_f(filename, args...; kwargs...)
     filename
 end
 
-export colormaps, plot_map, plot_polar_map,
+export colormaps,
+plot_map, plot_polar_map, plot_matrix,
 set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
 axis_add_ticks, set_ticklabel_props, π_labels,
