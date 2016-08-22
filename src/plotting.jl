@@ -90,6 +90,8 @@ function set_latex_serif(; kwargs...)
        usetex = true)
     rc("font";
        family = "serif")
+    rc("pgf";
+       rcfonts = false)
     rc("mathtext";
        rm = "serif",
        it = "serif:italic",
