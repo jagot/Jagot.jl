@@ -161,20 +161,22 @@ function π_labels(ax = :x, max_count = 10)
         mi,ma = map(l -> trunc(Int, l/π), lims)
     end
     d = round(Int, max((ma-mi)/max_count,1))
-    r = mi:d:ma
-    gca()[ax == :x ? :set_xticks : :set_yticks](collect(r)*π/f)
-    div = f == 2 ? "/2" : ""
-    gca()[ax == :x ? :set_xticklabels : :set_yticklabels](map(r) do i
-                                                          if i == 0
-                                                          0
-                                                          elseif i == 1
-                                                          "π$div"
-                                                          elseif i == -1
-                                                          "-π$div"
-                                                          else
-                                                          "$(i)π$div"
-                                                          end
-                                                          end)
+    r = (mi:d:ma)//f
+    gca()[ax == :x ? :set_xticks : :set_yticks](collect(r)*π)
+
+    den_str = v -> den(v) != 1 ? "/$(den(v))" : ""
+    tick_labels = map(r) do i
+        if i == 0
+            0
+        elseif num(i) == 1
+            "π$(den_str(i))"
+        elseif num(i) == -1
+            "-π$(den_str(i))"
+        else
+            "$(num(i))π$(den_str(i))"
+        end
+    end
+    gca()[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
 end
 
 pyslice(args...) = pycall(pybuiltin("slice"), PyObject, args...)
