@@ -7,6 +7,14 @@ using SuperSub
 
 include("colormaps.jl")
 
+function colorbar_hack(v::AbstractVector,cmap)
+    Z = [0 0
+         0 0]
+    CS3 = contourf(Z, v, cmap=cmap)
+    clf()
+    CS3
+end
+
 function filter_kwargs(kwargs, sym)
     filter!(f -> f[1] != sym, kwargs)
 end
@@ -191,7 +199,7 @@ function savefig_f(filename, args...; kwargs...)
     filename
 end
 
-export colormaps,
+export colormaps, colorbar_hack,
 plot_map, plot_polar_map, plot_matrix,
 set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
