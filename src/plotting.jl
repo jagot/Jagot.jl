@@ -3,6 +3,7 @@ using PyPlot
 using PyCall
 @pyimport matplotlib.colors as COL
 @pyimport numpy.ma as masked_array
+@pyimport matplotlib.backends.backend_pgf as pgf_b
 using SuperSub
 
 include("colormaps.jl")
@@ -199,12 +200,23 @@ function savefig_f(filename, args...; kwargs...)
     filename
 end
 
+function set_pgf_to_pdf(preamble=[]; texsystem = "xelatex")
+    matplotlib[:rcdefaults]()
+    ion()
+    matplotlib[:backend_bases][:register_backend]("pdf", pgf_b.FigureCanvasPgf)
+
+    set_latex_serif()
+    rc("pgf";
+       texsystem = texsystem,
+       preamble = preamble)
+end
+
 export colormaps, colorbar_hack,
 plot_map, plot_polar_map, plot_matrix,
 set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
 axis_add_ticks, set_ticklabel_props, π_labels,
 pyslice, square_axs,
-savefig_f
+savefig_f, set_pgf_to_pdf
 
 end
