@@ -1,3 +1,4 @@
+# * Setup
 module plotting
 using PyPlot
 using PyCall
@@ -5,6 +6,8 @@ using PyCall
 @pyimport numpy.ma as masked_array
 @pyimport matplotlib.backends.backend_pgf as pgf_b
 using SuperSub
+
+# * Colormaps
 
 include("colormaps.jl")
 
@@ -15,6 +18,8 @@ function colorbar_hack(v::AbstractVector,cmap)
     clf()
     CS3
 end
+
+# * Map plots
 
 function filter_kwargs(kwargs, sym)
     filter!(f -> f[1] != sym, kwargs)
@@ -69,6 +74,19 @@ function plot_matrix(a, args...; kwargs...)
     square_axs()
 end
 
+# * LaTeX/font setup
+
+function set_pgf_to_pdf(preamble=[]; texsystem = "xelatex")
+    matplotlib[:rcdefaults]()
+    ion()
+    matplotlib[:backend_bases][:register_backend]("pdf", pgf_b.FigureCanvasPgf)
+
+    set_latex_serif()
+    rc("pgf";
+       texsystem = texsystem,
+       preamble = preamble)
+end
+
 function set_font(; kwargs...)
     keys = map(first, kwargs)
 
@@ -115,6 +133,8 @@ function latex(o)
     takebuf_string(io)
 end
 
+# * Scientific notation
+
 function latex_base10(v)
     if v==0
         return "0"
@@ -145,6 +165,8 @@ function base10(v)
     end
 end
 base10(v::Vector) = map(base10, v)
+
+# * Axes/tick(label)s
 
 function axis_add_ticks(ticks, labels, ax = :x; kwargs...)
     a = gca()
@@ -188,35 +210,28 @@ function π_labels(ax = :x, max_count = 10)
     gca()[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
 end
 
-pyslice(args...) = pycall(pybuiltin("slice"), PyObject, args...)
-
 function square_axs()
     gca()[:set_aspect]("equal")
     gca()[:autoscale](tight=true)
 end
+
+# * Misc
+
+pyslice(args...) = pycall(pybuiltin("slice"), PyObject, args...)
 
 function savefig_f(filename, args...; kwargs...)
     savefig(filename, args...; kwargs...)
     filename
 end
 
-function set_pgf_to_pdf(preamble=[]; texsystem = "xelatex")
-    matplotlib[:rcdefaults]()
-    ion()
-    matplotlib[:backend_bases][:register_backend]("pdf", pgf_b.FigureCanvasPgf)
-
-    set_latex_serif()
-    rc("pgf";
-       texsystem = texsystem,
-       preamble = preamble)
-end
+# * Exports
 
 export colormaps, colorbar_hack,
 plot_map, plot_polar_map, plot_matrix,
-set_font, set_times_new_roman, set_latex_serif,
+set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
 axis_add_ticks, set_ticklabel_props, π_labels,
-pyslice, square_axs,
-savefig_f, set_pgf_to_pdf
+square_axs,
+pyslice, savefig_f
 
 end
