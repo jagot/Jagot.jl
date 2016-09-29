@@ -176,13 +176,13 @@ function π_labels(ax = :x, max_count = 10)
     den_str = v -> den(v) != 1 ? "/$(den(v))" : ""
     tick_labels = map(r) do i
         if i == 0
-            0
+            L"0"
         elseif num(i) == 1
-            "π$(den_str(i))"
+            latexstring("\\pi$(den_str(i))")
         elseif num(i) == -1
-            "-π$(den_str(i))"
+            latexstring("-\\pi$(den_str(i))")
         else
-            "$(num(i))π$(den_str(i))"
+            latexstring("$(num(i))\\pi$(den_str(i))")
         end
     end
     gca()[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
