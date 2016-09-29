@@ -79,7 +79,7 @@ function set_font(; kwargs...)
     end
 
     for i in eachindex(kwargs)
-        kwargs[i] = (symbol(replace(string(kwargs[i][1]), "_", "-")), kwargs[i][2])
+        kwargs[i] = (Symbol(replace(string(kwargs[i][1]), "_", "-")), kwargs[i][2])
     end
 
     rc("font"; kwargs...)
