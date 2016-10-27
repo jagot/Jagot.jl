@@ -183,7 +183,7 @@ function set_ticklabel_props(ax=:x; kwargs...)
     setp(labels; kwargs...)
 end
 
-function π_labels(ax = :x, max_count = 10)
+function π_labels(ax = :x, max_count = 10; pi_sym = "\\pi")
     lims = gca()[ax == :x ? :get_xlim : :get_ylim]()
     f = 2
     mi,ma = map(l -> trunc(Int, l/(π/2)), lims)
@@ -198,13 +198,13 @@ function π_labels(ax = :x, max_count = 10)
     den_str = v -> den(v) != 1 ? "/$(den(v))" : ""
     tick_labels = map(r) do i
         if i == 0
-            L"0"
+            L"$0$"
         elseif num(i) == 1
-            latexstring("\\pi$(den_str(i))")
+            latexstring("\$$(pi_sym)$(den_str(i))\$")
         elseif num(i) == -1
-            latexstring("-\\pi$(den_str(i))")
+            latexstring("\$-$(pi_sym)$(den_str(i))\$")
         else
-            latexstring("$(num(i))\\pi$(den_str(i))")
+            latexstring("\$$(num(i))$(pi_sym)$(den_str(i))\$")
         end
     end
     gca()[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
