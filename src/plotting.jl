@@ -210,9 +210,39 @@ function π_labels(ax = :x, max_count = 10)
     gca()[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
 end
 
+function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x)
+    if axis == :x
+        xticks(ts)
+    else
+        yticks(ts)
+    end
+    tls = map(ts) do t
+        if t == 0
+            L"0"
+        elseif den==1
+            latexstring("$(num(t))")
+        else
+            latexstring("$(num(t))/$(den(t))")
+        end
+    end
+    gca()[axis == :x ? :set_xticklabels : :set_yticklabels](tls)
+end
+
 function square_axs()
     gca()[:set_aspect]("equal")
     gca()[:autoscale](tight=true)
+end
+
+function axes_labels_opposite(axis = :y, ax = gca())
+    if axis == :y
+        ax[:yaxis][:tick_right]()
+        ax[:yaxis][:set_ticks_position]("both")
+        ax[:yaxis][:set_label_position]("right")
+    else
+        ax[:xaxis][:tick_top]()
+        ax[:xaxis][:set_ticks_position]("both")
+        ax[:xaxis][:set_label_position]("top")
+    end
 end
 
 # * Misc
@@ -230,8 +260,8 @@ export colormaps, colorbar_hack,
 plot_map, plot_polar_map, plot_matrix,
 set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
-axis_add_ticks, set_ticklabel_props, π_labels,
-square_axs,
+axis_add_ticks, set_ticklabel_props, π_labels, frac_ticks,
+square_axs, axes_labels_opposite,
 pyslice, savefig_f
 
 end
