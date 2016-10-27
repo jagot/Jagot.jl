@@ -46,7 +46,7 @@ function (cmap::PyPlot.ColorMap)(f::Real)
 end
 
 (cmap::PyPlot.ColorMap)(i::Integer, l::Integer) =
-    l != 0 ? cmap((i-1)/(l-1)) : cmap(0.5)
+    l > 1 ? cmap((i-1)/(l-1)) : cmap(0.5)
 
 export get_cmap, call
 
