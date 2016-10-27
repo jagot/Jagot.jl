@@ -173,8 +173,8 @@ function axis_add_ticks(ticks, labels, ax = :x; kwargs...)
     a2 = a[ax == :x ? :twiny : :twinx]()
     a2[ax == :x ? :set_xlim : :set_ylim](a[ax == :x ? :get_xlim : :get_ylim]())
     a2[ax == :x ? :set_xscale : :set_yscale](a[ax == :x ? :get_xscale : :get_yscale]())
-    a2[ax == :x ? :set_xticks : :set_yticks](collect(ticks))
-    a2[ax == :x ? :set_xticklabels : :set_yticklabels](collect(labels); kwargs...)
+    a2[ax == :x ? :set_xticks : :set_yticks](vec(collect(ticks)))
+    a2[ax == :x ? :set_xticklabels : :set_yticklabels](vec(collect(labels)); kwargs...)
     sca(a)
 end
 
