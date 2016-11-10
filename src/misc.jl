@@ -30,5 +30,7 @@ function upsample(v::AbstractVector, fac::Int,
     nv, nv[nsel]
 end
 
+meshgrid(x::AbstractVector,y::AbstractVector) =
+    repeat(x', outer=(length(y),1)),repeat(y, outer=(1,length(x)))
 
-export ind, upsample
+export ind, upsample, meshgrid
