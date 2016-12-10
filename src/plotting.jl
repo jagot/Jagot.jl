@@ -227,6 +227,19 @@ function set_ticklabel_props(ax=:x; kwargs...)
     setp(labels; kwargs...)
 end
 
+function π_frac_string(i; pi_sym = "\\pi")
+    den_str = v -> den(v) != 1 ? "/$(den(v))" : ""
+    if i == 0
+        L"$0$"
+    elseif num(i) == 1
+        latexstring("\$$(pi_sym)$(den_str(i))\$")
+    elseif num(i) == -1
+        latexstring("\$-$(pi_sym)$(den_str(i))\$")
+    else
+        latexstring("\$$(num(i))$(pi_sym)$(den_str(i))\$")
+    end
+end
+
 function π_labels(ax = :x, max_count = 10; pi_sym = "\\pi")
     lims = gca()[ax == :x ? :get_xlim : :get_ylim]()
     f = 2
@@ -239,17 +252,8 @@ function π_labels(ax = :x, max_count = 10; pi_sym = "\\pi")
     r = (mi:d:ma)//f
     gca()[ax == :x ? :set_xticks : :set_yticks](collect(r)*π)
 
-    den_str = v -> den(v) != 1 ? "/$(den(v))" : ""
     tick_labels = map(r) do i
-        if i == 0
-            L"$0$"
-        elseif num(i) == 1
-            latexstring("\$$(pi_sym)$(den_str(i))\$")
-        elseif num(i) == -1
-            latexstring("\$-$(pi_sym)$(den_str(i))\$")
-        else
-            latexstring("\$$(num(i))$(pi_sym)$(den_str(i))\$")
-        end
+        π_frac_string(i, pi_sym = pi_sym)
     end
     gca()[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
 end
@@ -304,7 +308,7 @@ export colormaps, colorbar_hack,
 plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix,
 set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
-axis_add_ticks, set_ticklabel_props, π_labels, frac_ticks,
+axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks,
 square_axs, axes_labels_opposite,
 pyslice, savefig_f
 
