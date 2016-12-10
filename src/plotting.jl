@@ -7,6 +7,8 @@ using PyCall
 @pyimport matplotlib.backends.backend_pgf as pgf_b
 using SuperSub
 
+using GSL
+
 # * Colormaps
 
 include("colormaps.jl")
@@ -66,6 +68,48 @@ function plot_polar_map(r::AbstractVector, v::AbstractVector, nφ,
     V = repmat(v,1,nφ)
     plot_map(X,Y,V, args...; kwargs...)
 end
+
+function spherical_harmonic_plot(fun::Function,
+                                 r::AbstractVector,
+                                 J::AbstractVector{Int},
+                                 v::AbstractMatrix,
+                                 nθ::Int,
+                                 args...;
+                                 wfn = false,
+                                 kwargs...)
+    nr = length(r)
+    (nr,length(J)) == size(v) || error("Dimension mismatch!")
+
+    θ = linspace(0,2π,nθ)
+    cosθ = cos(θ)
+
+    R = repmat(r,1,nθ)
+    Θ = repmat(θ',nr,1)
+
+    X = R.*cos(Θ)
+    Y = R.*sin(Θ)
+
+    V = zeros(eltype(v), nr, nθ)
+
+    leg_fun = (wfn ? sf_legendre_sphPlm : sf_legendre_Plm)
+
+    for j in eachindex(J)
+        PJ = map(x -> leg_fun(J[j], 0, x), cosθ)'
+        V += broadcast(*, v[:,j], PJ)
+    end
+
+    plot_map(X, Y, fun(V), args...; kwargs...)
+end
+spherical_harmonic_plot(r::AbstractVector,
+                        J::AbstractVector{Int},
+                        v::AbstractMatrix,
+                        nθ::Int,
+                        args...; kwargs...) = spherical_harmonic_plot(identity,
+                                                                      r::AbstractVector,
+                                                                      J::AbstractVector{Int},
+                                                                      v::AbstractMatrix,
+                                                                      nθ,
+                                                                      args...; kwargs...)
 
 function plot_matrix(a, args...; kwargs...)
     aa = pycall(masked_array.masked_equal, Any, full(a), 0)
@@ -257,7 +301,7 @@ end
 # * Exports
 
 export colormaps, colorbar_hack,
-plot_map, plot_polar_map, plot_matrix,
+plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix,
 set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
 axis_add_ticks, set_ticklabel_props, π_labels, frac_ticks,
