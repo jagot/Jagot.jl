@@ -263,7 +263,7 @@ function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x)
     tls = map(ts) do t
         if t == 0
             L"0"
-        elseif den==1
+        elseif den(t)==1
             latexstring("$(num(t))")
         else
             latexstring("$(num(t))/$(den(t))")
