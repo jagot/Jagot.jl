@@ -76,9 +76,11 @@ function spherical_harmonic_plot(fun::Function,
                                  nθ::Int,
                                  args...;
                                  wfn = false,
+                                 J_max = Inf,
+                                 m_min = 0, m_max = Inf,
                                  kwargs...)
     nr = length(r)
-    (nr,length(J)) == size(v) || error("Dimension mismatch!")
+    (nr,length(J)) == size(v) || (wfn && (nr,length(J)^2) == size(v)) || error("Dimension mismatch!")
 
     θ = linspace(0,2π,nθ)
     cosθ = cos(θ)
@@ -93,9 +95,27 @@ function spherical_harmonic_plot(fun::Function,
 
     leg_fun = (wfn ? sf_legendre_sphPlm : sf_legendre_Plm)
 
-    for j in eachindex(J)
-        PJ = map(x -> leg_fun(J[j], 0, x), cosθ)'
-        V += broadcast(*, v[:,j], PJ)
+    if size(v,2) == length(J)
+        for j in eachindex(J)
+            J[j] > J_max && break
+            PJ = map(x -> leg_fun(J[j], 0, x), cosθ)'
+            V += broadcast(*, v[:,j], PJ)
+        end
+    elseif !wfn
+        error("3d plot only implemented for wavefunctions")
+    else
+        j = 0
+        for ell in J
+            ell > J_max && break
+            for m in -ell:ell
+                j += 1
+                abs(m) > m_max && continue
+                abs(m) < m_min && continue
+                Pell_m = (m<0 ? (-1)^abs(m) : 1
+                          )*map(x -> leg_fun(ell, abs(m), x), cosθ)'
+                V += broadcast(*, v[:,j], Pell_m)
+            end
+        end
     end
 
     plot_map(X, Y, fun(V), args...; kwargs...)
