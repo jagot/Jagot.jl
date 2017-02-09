@@ -302,6 +302,9 @@ function savefig_f(filename, args...; kwargs...)
     filename
 end
 
+# * ICC support
+include("save_pgf_with_icc.jl")
+
 # * Exports
 
 export colormaps, colorbar_hack,
