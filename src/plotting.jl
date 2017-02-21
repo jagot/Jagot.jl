@@ -296,6 +296,10 @@ function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x)
     gca()[axis == :x ? :set_xticklabels : :set_yticklabels](tls)
 end
 
+function sci_ticks(ax)
+    ticklabel_format(style="sci", axis="$ax", scilimits=(0,0))
+end
+
 function square_axs()
     gca()[:set_aspect]("equal")
     gca()[:autoscale](tight=true)
@@ -331,7 +335,7 @@ export colormaps, colorbar_hack,
 plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix,
 set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
-axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks,
+axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks,
 square_axs, axes_labels_opposite,
 pyslice, savefig_f
 
