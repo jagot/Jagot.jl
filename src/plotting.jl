@@ -278,7 +278,7 @@ function π_labels(ax = :x, max_count = 10; pi_sym = "\\pi")
     gca()[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
 end
 
-function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x)
+function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x; sfrac = false)
     if axis == :x
         xticks(ts)
     else
@@ -290,7 +290,11 @@ function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x)
         elseif den(t)==1
             latexstring("$(num(t))")
         else
-            latexstring("$(num(t))/$(den(t))")
+            if sfrac
+                latexstring("\\sfrac{$(num(t))}{$(den(t))}")
+            else
+                latexstring("$(num(t))/$(den(t))")
+            end
         end
     end
     gca()[axis == :x ? :set_xticklabels : :set_yticklabels](tls)
