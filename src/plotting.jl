@@ -193,7 +193,7 @@ end
 
 function latex(o)
     io = IOBuffer()
-    writemime(io, MIME"text/latex"(), o)
+    show(io, MIME"text/latex"(), o)
     takebuf_string(io)
 end
 
