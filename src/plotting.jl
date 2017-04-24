@@ -326,6 +326,8 @@ function savefig_f(filename, args...; kwargs...)
     filename
 end
 
+reltext(x,y,string,args...;kwargs...) = text(x,y,string,transform=gca()[:transAxes],args...;kwargs...)
+
 # * ICC support
 include("save_pgf_with_icc.jl")
 
@@ -337,6 +339,6 @@ set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
 latex, latex_base10, base10,
 axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks,
 square_axs, axes_labels_opposite,
-pyslice, savefig_f
+pyslice, savefig_f, reltext
 
 end
