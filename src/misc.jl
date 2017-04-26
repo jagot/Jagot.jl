@@ -5,7 +5,7 @@ ind{T<:Number,U<:Number}(v::AbstractVector{T}, a::U) = indmin(abs(v-a))
 function upsample(v::AbstractVector, fac::Int,
                   do_plot::Bool = false)
     dv = v[2]-v[1]
-    all((diff(v) - dv) .<= eps(typeof(dv))) || error("Not equal spacing between all elements")
+    all(abs(diff(v) - dv)/abs(dV) .<= 1e-6) || error("Not equal spacing between all elements")
     ndv = dv/fac
     nv = v[1]:ndv:v[end]+0.9ndv
 
