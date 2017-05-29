@@ -329,11 +329,9 @@ end
 function axes_labels_opposite(axis = :y, ax = gca())
     if axis == :y
         ax[:yaxis][:tick_right]()
-        ax[:yaxis][:set_ticks_position]("both")
         ax[:yaxis][:set_label_position]("right")
     else
         ax[:xaxis][:tick_top]()
-        ax[:xaxis][:set_ticks_position]("both")
         ax[:xaxis][:set_label_position]("top")
     end
 end
