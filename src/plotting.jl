@@ -336,6 +336,18 @@ function axes_labels_opposite(axis = :y, ax = gca())
     end
 end
 
+function no_tick_labels(axis = :x, ax = gca(), ticks = false)
+    a,b,la,lb = if axis == :x
+        :bottom,:top,:labelbottom,:labeltop
+    else
+        :left,:right,:labelleft,:labelright
+    end
+    ticks = ticks ? "on" : "off"
+    ax[:tick_params](; which="both",
+                     Dict(a => ticks, b => ticks,
+                          la => "off", lb => "off")...)
+end
+
 # * Misc
 
 pyslice(args...) = pycall(pybuiltin("slice"), PyObject, args...)
@@ -358,7 +370,7 @@ export figure, subplot,
     set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
     latex, latex_base10, base10,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks,
-    square_axs, axes_labels_opposite,
+    square_axs, axes_labels_opposite, no_tick_labels,
     pyslice, savefig_f, reltext
 
 end
