@@ -5,7 +5,7 @@ using PyCall
 @pyimport matplotlib.colors as COL
 @pyimport numpy.ma as masked_array
 @pyimport matplotlib.backends.backend_pgf as pgf_b
-using SuperSub
+using UnicodeFun
 
 using GSL
 
@@ -240,9 +240,9 @@ function base10(v)
     v /= 10^ex
     ex = floor(Int, ex)
     if v==1
-        @sprintf("10%s",superscript(ex))
+        @sprintf("10%s",to_superscript(ex))
     else
-        @sprintf("%0.3f×10%s",v,superscript(ex))
+        @sprintf("%0.3f×10%s",v,to_superscript(ex))
     end
 end
 base10(v::Vector) = map(base10, v)
