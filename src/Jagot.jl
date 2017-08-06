@@ -2,7 +2,6 @@ module Jagot
 
 include("misc.jl")
 include("plotting.jl")
-include("physics.jl")
 include("spectra.jl")
 include("utils.jl")
 
