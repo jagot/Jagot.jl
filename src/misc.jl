@@ -1,11 +1,11 @@
 using PyPlot
 
-ind{T<:Number,U<:Number}(v::AbstractVector{T}, a::U) = indmin(abs(v-a))
+ind{T<:Number,U<:Number}(v::AbstractVector{T}, a::U) = indmin(abs.(v-a))
 
 function upsample(v::AbstractVector, fac::Int,
                   do_plot::Bool = false)
     dv = v[2]-v[1]
-    all(abs(diff(v) - dv)/abs(dv) .<= 1e-6) || error("Not equal spacing between all elements")
+    all(abs.(diff(v) - dv)/abs(dv) .<= 1e-6) || error("Not equal spacing between all elements")
     ndv = dv/fac
     nv = v[1]:ndv:v[end]+0.9ndv
 
@@ -31,8 +31,8 @@ function upsample(v::AbstractVector, fac::Int,
 end
 
 function log_upsample(v::AbstractVector, fac::Int)
-    nv,nvv = upsample(log(v), fac)
-    exp(nv),exp(nvv)
+    nv,nvv = upsample(log.(v), fac)
+    exp.(nv),exp.(nvv)
 end
 
 meshgrid(x::AbstractVector,y::AbstractVector) =
