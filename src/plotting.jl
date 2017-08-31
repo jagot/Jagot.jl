@@ -265,15 +265,15 @@ function set_ticklabel_props(ax=:x; kwargs...)
 end
 
 function π_frac_string(i; pi_sym = "\\pi")
-    den_str = v -> den(v) != 1 ? "/$(den(v))" : ""
+    den_str = v -> denominator(v) != 1 ? "/$(denominator(v))" : ""
     if i == 0
         L"$0$"
-    elseif num(i) == 1
+    elseif numerator(i) == 1
         latexstring("\$$(pi_sym)$(den_str(i))\$")
-    elseif num(i) == -1
+    elseif numerator(i) == -1
         latexstring("\$-$(pi_sym)$(den_str(i))\$")
     else
-        latexstring("\$$(num(i))$(pi_sym)$(den_str(i))\$")
+        latexstring("\$$(numerator(i))$(pi_sym)$(den_str(i))\$")
     end
 end
 
@@ -304,13 +304,13 @@ function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x; sfrac = false)
     tls = map(ts) do t
         if t == 0
             L"0"
-        elseif den(t)==1
-            latexstring("$(num(t))")
+        elseif denominator(t)==1
+            latexstring("$(numerator(t))")
         else
             if sfrac
-                latexstring("\\sfrac{$(num(t))}{$(den(t))}")
+                latexstring("\\sfrac{$(numerator(t))}{$(denominator(t))}")
             else
-                latexstring("$(num(t))/$(den(t))")
+                latexstring("$(numerator(t))/$(denominator(t))")
             end
         end
     end
