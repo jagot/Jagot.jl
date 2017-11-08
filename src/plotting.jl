@@ -9,6 +9,8 @@ using UnicodeFun
 
 using GSL
 
+plot_style(style::String) = matplotlib[:style][:use](style)
+
 # * Figure wrappers
 import PyPlot: figure, subplot
 
@@ -365,18 +367,23 @@ end
 
 reltext(x,y,string,args...;kwargs...) = text(x,y,string,transform=gca()[:transAxes],args...;kwargs...)
 
+function disp()
+    display(gcf())
+    println()
+end
+
 # * ICC support
 include("save_pgf_with_icc.jl")
 
 # * Exports
 
-export figure, subplot,
+export plot_style, figure, subplot,
     colormaps, colorbar_hack,
     plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix,
     set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
     latex, latex_base10, base10,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks, colorbar_sci_ticks,
     square_axs, axes_labels_opposite, no_tick_labels,
-    pyslice, savefig_f, reltext
+    pyslice, savefig_f, reltext, disp
 
 end
