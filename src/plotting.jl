@@ -157,6 +157,35 @@ function plot_matrix(a, args...; kwargs...)
     square_axs()
 end
 
+# Stolen from http://scipy-cookbook.readthedocs.io/items/Matplotlib_HintonDiagrams.html
+function hinton_plot_matrix(a; max_weight=nothing, transparent=false)
+    height, width = size(a)
+    if max_weight == nothing
+        max_weight = 2^ceil(log2(maximum(abs, a)))
+    end
+    fill([0,width,width,0],[0,0,height,height],transparent ? "none" : "gray")
+
+    function blob(x,y,area,colour)
+        hs = sqrt(area) / 2
+        xcorners = [x - hs, x + hs, x + hs, x - hs]
+        ycorners = [y - hs, y - hs, y + hs, y + hs]
+        fill(xcorners, ycorners, colour, edgecolor=colour)
+    end
+
+    for x in 1:width
+        for y in 1:height
+            w = a[y,x]
+            if w > 0
+                blob(x - 0.5, height - y + 0.5, min(1,w/max_weight),"white")
+            elseif w < 0
+                blob(x - 0.5, height - y + 0.5, min(1,-w/max_weight),"black")
+            end
+        end
+    end
+    square_axs()
+    grid("off")
+end
+
 # * LaTeX/font setup
 
 function set_pgf_to_pdf(preamble=[]; texsystem = "xelatex")
@@ -379,7 +408,7 @@ include("save_pgf_with_icc.jl")
 
 export plot_style, figure, subplot,
     colormaps, colorbar_hack,
-    plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix,
+    plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix, hinton_plot_matrix,
     set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
     latex, latex_base10, base10,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks, colorbar_sci_ticks,
