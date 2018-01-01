@@ -7,6 +7,8 @@ using PyCall
 @pyimport matplotlib.backends.backend_pgf as pgf_b
 using UnicodeFun
 
+import Jagot: meshgrid
+
 using GSL
 
 plot_style(style::String) = matplotlib[:style][:use](style)
@@ -149,6 +151,7 @@ spherical_harmonic_plot(r::AbstractVector,
                                                                       v::AbstractMatrix,
                                                                       nθ,
                                                                       args...; kwargs...)
+# * Matrix plots
 
 function plot_matrix(a, args...; kwargs...)
     aa = pycall(masked_array.masked_equal, Any, full(a), 0)
@@ -157,33 +160,70 @@ function plot_matrix(a, args...; kwargs...)
     square_axs()
 end
 
-# Stolen from http://scipy-cookbook.readthedocs.io/items/Matplotlib_HintonDiagrams.html
-function hinton_plot_matrix(a; max_weight=nothing, transparent=false)
+# Inspired by/stolen from
+# https://github.com/tonysyu/mpltools/blob/master/mpltools/special/hinton.py
+
+@pydef type SquareCollection <: matplotlib[:collections][:RegularPolyCollection]
+    __init__(self; kwargs...) = begin
+        matplotlib[:collections][:RegularPolyCollection][:__init__](
+            self, 4, rotation=pi/4; kwargs...
+        )
+    end
+    get_transform(self) = begin
+        """Return transform scaling circle areas to data space."""
+        ax = self[:axes]
+        pts2pixels = 72.0 / ax[:figure][:dpi]
+        scale_x = pts2pixels * ax[:bbox][:width] / ax[:viewLim][:width]
+        scale_y = pts2pixels * ax[:bbox][:height] / ax[:viewLim][:height]
+        matplotlib[:transforms][:Affine2D]()[:scale](scale_x, scale_y)
+    end
+end
+
+function hinton_plot_matrix(a; max_weight=nothing,
+                            pos_color=nothing,
+                            neg_color=nothing,
+                            bg_color="none",
+                            traditional=false)
+    if traditional
+        pos_color = "white"
+        neg_color = "black"
+        bg_color = "gray"
+    else
+        pos_color == nothing && (pos_color="C0")
+        neg_color == nothing && (neg_color="C1")
+    end
+    
+    ax = gca()
+    ax[:set_facecolor](bg_color)
+    
     height, width = size(a)
     if max_weight == nothing
         max_weight = 2^ceil(log2(maximum(abs, a)))
     end
-    fill([0,width,width,0],[0,0,height,height],transparent ? "none" : "gray")
 
-    function blob(x,y,area,colour)
-        hs = sqrt(area) / 2
-        xcorners = [x - hs, x + hs, x + hs, x - hs]
-        ycorners = [y - hs, y - hs, y + hs, y + hs]
-        fill(xcorners, ycorners, colour, edgecolor=colour)
-    end
+    vals = clamp.(a/max_weight, -1, 1)
+    neg = vals .< 0
+    pos = vals .> 0
 
-    for x in 1:width
-        for y in 1:height
-            w = a[y,x]
-            if w > 0
-                blob(x - 0.5, height - y + 0.5, min(1,w/max_weight),"white")
-            elseif w < 0
-                blob(x - 0.5, height - y + 0.5, min(1,-w/max_weight),"black")
-            end
+    cols,rows = meshgrid(1:width,1:height)
+
+
+    for (sel,color) in zip([neg,pos], [neg_color,pos_color])
+        if any(sel)
+            xy = collect(zip(cols[sel], rows[sel]))
+            circle_areas = π/2 * abs.(vals[sel])
+            squares = SquareCollection(sizes=circle_areas,
+                                       offsets=xy, transOffset=ax[:transData],
+                                       facecolor=color, edgecolor=color)
+            ax[:add_collection](squares, autolim=true)
         end
     end
     square_axs()
     grid("off")
+    ax[:set_xlim](0.5, width+0.5)
+    ax[:set_ylim](0.5, height+0.5)
+    gca()[:invert_yaxis]()
+    ax
 end
 
 # * LaTeX/font setup
