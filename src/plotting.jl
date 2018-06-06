@@ -104,13 +104,13 @@ function spherical_harmonic_plot(fun::Function,
     (nr,length(J)) == size(v) || (wfn && (nr,length(J)^2) == size(v)) || error("Dimension mismatch!")
 
     θ = linspace(0,2π,nθ)
-    cosθ = cos(θ)
+    cosθ = cos.(θ)
 
     R = repmat(r,1,nθ)
     Θ = repmat(θ',nr,1)
 
-    X = R.*cos(Θ)
-    Y = R.*sin(Θ)
+    X = R.*cos.(Θ)
+    Y = R.*sin.(Θ)
 
     V = zeros(eltype(v), nr, nθ)
 
@@ -139,7 +139,7 @@ function spherical_harmonic_plot(fun::Function,
         end
     end
 
-    plot_map(X, Y, fun(V), args...; kwargs...)
+    plot_map(X, Y, fun.(V), args...; kwargs...)
 end
 spherical_harmonic_plot(r::AbstractVector,
                         J::AbstractVector{Int},
