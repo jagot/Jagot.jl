@@ -441,6 +441,8 @@ function disp()
     println()
 end
 
+GridSpec = matplotlib[:gridspec][:GridSpec]
+
 # * ICC support
 include("save_pgf_with_icc.jl")
 
@@ -456,6 +458,7 @@ export plot_style, figure, subplot,
     latex, latex_base10, base10,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks, colorbar_sci_ticks,
     square_axs, axes_labels_opposite, no_tick_labels,
-    pyslice, savefig_f, reltext, disp, hide_toolbar
+    pyslice, savefig_f, reltext, disp, hide_toolbar,
+    GridSpec
 
 end
