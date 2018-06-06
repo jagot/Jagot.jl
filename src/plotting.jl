@@ -179,7 +179,8 @@ end
     end
 end
 
-function hinton_plot_matrix(a; max_weight=nothing,
+function hinton_plot_matrix(a::AbstractMatrix;
+                            max_weight=nothing,
                             pos_color=nothing,
                             neg_color=nothing,
                             bg_color="none",
@@ -225,6 +226,7 @@ function hinton_plot_matrix(a; max_weight=nothing,
     gca()[:invert_yaxis]()
     ax
 end
+hinton_plot_matrix(a;kwargs...) = hinton_plot_matrix(full(a);kwargs...)
 
 # * LaTeX/font setup
 
