@@ -1,6 +1,6 @@
 using PyPlot
 
-ind{T<:Number,U<:Number}(v::AbstractVector{T}, a::U) = indmin(abs.(v-a))
+ind(v::AbstractVector{T}, a::U) where {T<:Number,U<:Number} = indmin(abs.(v-a))
 
 function upsample(v::AbstractVector, fac::Int,
                   do_plot::Bool = false)
