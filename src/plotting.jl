@@ -82,16 +82,21 @@ function plot_map(args...; kwargs...)
     p
 end
 
-function plot_polar_map(r::AbstractVector, v::AbstractVector, nφ,
+function plot_polar_map(r::AbstractVector, ϕ::AbstractVector, V::AbstractMatrix,
                         args...; kwargs...)
-    φ = linspace(0,2π,nφ)
-    R = repmat(r,1,nφ)
-    Φ = repmat(φ',length(r),1)
-    X = R.*cos(Φ)
-    Y = R.*sin(Φ)
-    V = repmat(v,1,nφ)
+    nϕ = length(ϕ)
+    R = repeat(r,1,nϕ)
+    Φ = repeat(ϕ',length(r),1)
+    X = R.*cos.(Φ)
+    Y = R.*sin.(Φ)
     plot_map(X,Y,V, args...; kwargs...)
 end
+
+plot_polar_map(r::AbstractVector, V::AbstractMatrix, nϕ::Integer, args...; kwargs...) =
+    plot_polar_map(r, range(0,stop=2π,length=nϕ), V, args...; kwargs...)
+
+plot_polar_map(r::AbstractVector, v::AbstractVector, nϕ::Integer, args...; kwargs...) =
+    plot_polar_map(r, repeat(v,1,nϕ), nϕ, args...; kwargs...)
 
 # function spherical_harmonic_plot(fun::Function,
 #                                  r::AbstractVector,
@@ -106,7 +111,7 @@ end
 #     nr = length(r)
 #     (nr,length(J)) == size(v) || (wfn && (nr,length(J)^2) == size(v)) || error("Dimension mismatch!")
 
-#     θ = linspace(0,2π,nθ)
+#     θ = range(0,stop=2π,length=nθ)
 #     cosθ = cos.(θ)
 
 #     R = repmat(r,1,nθ)
@@ -423,10 +428,9 @@ function no_tick_labels(axis = :x, ax = gca(), ticks = false)
     else
         :left,:right,:labelleft,:labelright
     end
-    ticks = ticks ? "on" : "off"
     ax[:tick_params](; which="both",
                      Dict(a => ticks, b => ticks,
-                          la => "off", lb => "off")...)
+                          la => false, lb => false)...)
 end
 
 # * Misc
