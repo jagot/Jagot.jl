@@ -2,9 +2,21 @@
 module plotting
 using PyPlot
 using PyCall
-@pyimport matplotlib.colors as COL
-@pyimport numpy.ma as masked_array
-@pyimport matplotlib.backends.backend_pgf as pgf_b
+
+const COL = PyNULL()
+const masked_array = PyNULL()
+const pgf_backend = PyNULL()
+# const pyplot_collections = PyNULL()
+# # const RegularPolyCollection = PyNULL()
+
+function __init__()
+    copy!(COL, pyimport_conda("matplotlib.colors", "matplotlib"))
+    copy!(masked_array, pyimport_conda("numpy.ma", "numpy"))
+    copy!(pgf_backend, pyimport_conda("matplotlib.backends.backend_pgf", "matplotlib"))
+    # copy!(pyplot_collections, pyimport_conda("matplotlib.collections", "matplotlib"))
+    # # copy!(RegularPolyCollection, pyplot_collections[:RegularPolyCollection])
+end
+
 using UnicodeFun
 
 import Jagot: meshgrid
@@ -45,33 +57,23 @@ end
 
 # * Map plots
 
-function filter_kwargs(kwargs, sym)
-    filter!(f -> f[1] != sym, kwargs)
-end
+filter_kwargs(kwargs, sym) = filter(p -> first(p) != sym, pairs(kwargs))
 
 function plot_map(args...; kwargs...)
-    keys = map(first,kwargs)
-    function push_default!(key, val)
-        if !(key in keys)
-            push!(kwargs, (key, val))
-        end
-    end
-    push_default!(:cmap, get_cmap("viridis"))
-    if (i = findfirst(keys, :cmap)) != 0 && typeof(kwargs[i][2]) <: AbstractString
-        kwargs[i] = (:cmap, get_cmap(kwargs[i][2]))
-    end
-    push_default!(:rasterized, true)
-    if (i = findfirst(keys, :norm)) != 0 && kwargs[i][2] == :log
-        kwargs[i] = (:norm, COL.LogNorm())
-    end
-    if (i = findfirst(keys, :align_ticks)) != 0 && (aw=kwargs[i][2]) != false && length(args) >= 3
+    kwargs = Dict{Symbol,Any}(kwargs)
+    set_default!(key, val) = (kwargs[key] = get(kwargs, key, val))
+    kwargs[:cmap] = get_cmap(get(kwargs, :cmap, "viridis"))
+    set_default!(:rasterized, true)
+    get(kwargs, :norm, :lin) == :log && (kwargs[:norm] = COL.LogNorm())
+    aw = get(kwargs, :align_ticks, false)
+    if aw != false && length(args) >= 3
         kwargs = filter_kwargs(kwargs, :align_ticks)
         x,y,z = args
         if aw != :y
-            x -= (x[2]-x[1])/2
+            x = x .- (x[2]-x[1])/2
         end
         if aw != :x
-            y -= (y[2]-y[1])/2
+            y = y .- (y[2]-y[1])/2
         end
         args = (x,y,z)
     end
@@ -155,7 +157,7 @@ spherical_harmonic_plot(r::AbstractVector,
 # * Matrix plots
 
 function plot_matrix(a, args...; kwargs...)
-    aa = pycall(masked_array.masked_equal, Any, full(a), 0)
+    aa = pycall(masked_array[:masked_equal], Any, Matrix(a), 0)
     plot_map(aa, args...; kwargs...)
     gca()[:invert_yaxis]()
     square_axs()
@@ -164,9 +166,9 @@ end
 # # Inspired by/stolen from
 # # https://github.com/tonysyu/mpltools/blob/master/mpltools/special/hinton.py
 
-# @pydef mutable struct SquareCollection <: matplotlib[:collections][:RegularPolyCollection]
+# @pydef mutable struct SquareCollection <: pyplot_collections[:RegularPolyCollection]
 #     __init__(self; kwargs...) = begin
-#         matplotlib[:collections][:RegularPolyCollection][:__init__](
+#         pyplot_collections[:RegularPolyCollection][:__init__](
 #             self, 4, rotation=pi/4; kwargs...
 #         )
 #     end
@@ -209,19 +211,18 @@ end
 
 #     cols,rows = meshgrid(1:width,1:height)
 
-
 #     for (sel,color) in zip([neg,pos], [neg_color,pos_color])
 #         if any(sel)
 #             xy = collect(zip(cols[sel], rows[sel]))
 #             circle_areas = π/2 * abs.(vals[sel])
-#             squares = SquareCollection(sizes=circle_areas,
-#                                        offsets=xy, transOffset=ax[:transData],
-#                                        facecolor=color, edgecolor=color)
-#             ax[:add_collection](squares, autolim=true)
+#             # squares = SquareCollection(sizes=circle_areas,
+#             #                            offsets=xy, transOffset=ax[:transData],
+#             #                            facecolor=color, edgecolor=color)
+#             # ax[:add_collection](squares, autolim=true)
 #         end
 #     end
 #     square_axs()
-#     grid("off")
+#     grid(false)
 #     ax[:set_xlim](0.5, width+0.5)
 #     ax[:set_ylim](0.5, height+0.5)
 #     gca()[:invert_yaxis]()
@@ -234,7 +235,7 @@ end
 function set_pgf_to_pdf(preamble=[]; texsystem = "xelatex")
     matplotlib[:rcdefaults]()
     ion()
-    matplotlib[:backend_bases][:register_backend]("pdf", pgf_b.FigureCanvasPgf)
+    matplotlib[:backend_bases][:register_backend]("pdf", pgf_backend.FigureCanvasPgf)
 
     set_latex_serif()
     rc("pgf";

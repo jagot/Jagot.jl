@@ -1,7 +1,5 @@
 using Glob
 
-pgf_backend = matplotlib[:backends][:backend_pgf]
-
 function add_icc(filename,
                  icc_prof = joinpath(dirname(@__FILE__), "sRGB_v4_ICC_preference.icc"))
     run(`convert $(filename) -profile $(icc_prof) $(filename)`)

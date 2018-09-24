@@ -17,7 +17,12 @@
 module colormaps
 using PyCall
 using PyPlot
-@pyimport matplotlib.colors as COL
+
+const COL = PyNULL()
+
+function __init__()
+    copy!(COL, pyimport_conda("matplotlib.colors", "matplotlib"))
+end
 
 function get_cmap(args...)
     plt[:cm][:get_cmap](args...)
