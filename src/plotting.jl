@@ -21,7 +21,7 @@ using UnicodeFun
 
 import Jagot: meshgrid
 
-using GSL
+# using GSL
 using Printf
 
 plot_style(style::String) = matplotlib[:style][:use](style)
@@ -93,67 +93,67 @@ function plot_polar_map(r::AbstractVector, v::AbstractVector, nφ,
     plot_map(X,Y,V, args...; kwargs...)
 end
 
-function spherical_harmonic_plot(fun::Function,
-                                 r::AbstractVector,
-                                 J::AbstractVector{Int},
-                                 v::AbstractMatrix,
-                                 nθ::Int,
-                                 args...;
-                                 wfn = false,
-                                 J_max = Inf,
-                                 m_min = 0, m_max = Inf,
-                                 kwargs...)
-    nr = length(r)
-    (nr,length(J)) == size(v) || (wfn && (nr,length(J)^2) == size(v)) || error("Dimension mismatch!")
+# function spherical_harmonic_plot(fun::Function,
+#                                  r::AbstractVector,
+#                                  J::AbstractVector{Int},
+#                                  v::AbstractMatrix,
+#                                  nθ::Int,
+#                                  args...;
+#                                  wfn = false,
+#                                  J_max = Inf,
+#                                  m_min = 0, m_max = Inf,
+#                                  kwargs...)
+#     nr = length(r)
+#     (nr,length(J)) == size(v) || (wfn && (nr,length(J)^2) == size(v)) || error("Dimension mismatch!")
 
-    θ = linspace(0,2π,nθ)
-    cosθ = cos.(θ)
+#     θ = linspace(0,2π,nθ)
+#     cosθ = cos.(θ)
 
-    R = repmat(r,1,nθ)
-    Θ = repmat(θ',nr,1)
+#     R = repmat(r,1,nθ)
+#     Θ = repmat(θ',nr,1)
 
-    X = R.*cos.(Θ)
-    Y = R.*sin.(Θ)
+#     X = R.*cos.(Θ)
+#     Y = R.*sin.(Θ)
 
-    V = zeros(eltype(v), nr, nθ)
+#     V = zeros(eltype(v), nr, nθ)
 
-    leg_fun = (wfn ? sf_legendre_sphPlm : sf_legendre_Plm)
+#     leg_fun = (wfn ? sf_legendre_sphPlm : sf_legendre_Plm)
 
-    if size(v,2) == length(J)
-        for j in eachindex(J)
-            J[j] > J_max && break
-            PJ = map(x -> leg_fun(J[j], 0, x), cosθ)'
-            V += broadcast(*, v[:,j], PJ)
-        end
-    elseif !wfn
-        error("3d plot only implemented for wavefunctions")
-    else
-        j = 0
-        for ell in J
-            ell > J_max && break
-            for m in -ell:ell
-                j += 1
-                abs(m) > m_max && continue
-                abs(m) < m_min && continue
-                Pell_m = (m<0 ? (-1)^abs(m) : 1
-                          )*map(x -> leg_fun(ell, abs(m), x), cosθ)'
-                V += broadcast(*, v[:,j], Pell_m)
-            end
-        end
-    end
+#     if size(v,2) == length(J)
+#         for j in eachindex(J)
+#             J[j] > J_max && break
+#             PJ = map(x -> leg_fun(J[j], 0, x), cosθ)'
+#             V += broadcast(*, v[:,j], PJ)
+#         end
+#     elseif !wfn
+#         error("3d plot only implemented for wavefunctions")
+#     else
+#         j = 0
+#         for ell in J
+#             ell > J_max && break
+#             for m in -ell:ell
+#                 j += 1
+#                 abs(m) > m_max && continue
+#                 abs(m) < m_min && continue
+#                 Pell_m = (m<0 ? (-1)^abs(m) : 1
+#                           )*map(x -> leg_fun(ell, abs(m), x), cosθ)'
+#                 V += broadcast(*, v[:,j], Pell_m)
+#             end
+#         end
+#     end
 
-    plot_map(X, Y, fun.(V), args...; kwargs...)
-end
-spherical_harmonic_plot(r::AbstractVector,
-                        J::AbstractVector{Int},
-                        v::AbstractMatrix,
-                        nθ::Int,
-                        args...; kwargs...) = spherical_harmonic_plot(identity,
-                                                                      r::AbstractVector,
-                                                                      J::AbstractVector{Int},
-                                                                      v::AbstractMatrix,
-                                                                      nθ,
-                                                                      args...; kwargs...)
+#     plot_map(X, Y, fun.(V), args...; kwargs...)
+# end
+# spherical_harmonic_plot(r::AbstractVector,
+#                         J::AbstractVector{Int},
+#                         v::AbstractMatrix,
+#                         nθ::Int,
+#                         args...; kwargs...) = spherical_harmonic_plot(identity,
+#                                                                       r::AbstractVector,
+#                                                                       J::AbstractVector{Int},
+#                                                                       v::AbstractMatrix,
+#                                                                       nθ,
+#                                                                       args...; kwargs...)
 # * Matrix plots
 
 function plot_matrix(a, args...; kwargs...)
