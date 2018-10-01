@@ -64,7 +64,7 @@ function plot_map(args...; kwargs...)
     set_default!(key, val) = (kwargs[key] = get(kwargs, key, val))
     kwargs[:cmap] = get_cmap(get(kwargs, :cmap, "viridis"))
     set_default!(:rasterized, true)
-    get(kwargs, :norm, :lin) == :log && (kwargs[:norm] = COL.LogNorm())
+    get(kwargs, :norm, :lin) == :log && (kwargs[:norm] = COL[:LogNorm]())
     aw = get(kwargs, :align_ticks, false)
     if aw != false && length(args) >= 3
         kwargs = filter_kwargs(kwargs, :align_ticks)
