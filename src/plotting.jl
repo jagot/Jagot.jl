@@ -57,7 +57,18 @@ end
 
 # * Map plots
 
-filter_kwargs(kwargs, sym) = filter(p -> first(p) != sym, pairs(kwargs))
+function filter_kwargs!(kwargs, sym, default=nothing)
+    v = get(kwargs, sym, default)
+    filter!(kv -> kv[1] != sym, kwargs)
+    v
+end
+
+function Base.size(pyobj::PyCall.PyObject)
+    :shape ∈ keys(pyobj) ||
+        throw(ArgumentError("`:shape` not present among `PyObject`s `keys`."))
+    pyobj[:shape]
+end
+Base.size(pyobj::PyCall.PyObject, i) = size(pyobj)[i]
 
 function plot_map(args...; kwargs...)
     kwargs = Dict{Symbol,Any}(kwargs)
@@ -65,20 +76,39 @@ function plot_map(args...; kwargs...)
     kwargs[:cmap] = get_cmap(get(kwargs, :cmap, "viridis"))
     set_default!(:rasterized, true)
     get(kwargs, :norm, :lin) == :log && (kwargs[:norm] = COL[:LogNorm]())
-    aw = get(kwargs, :align_ticks, false)
-    if aw != false && length(args) >= 3
-        kwargs = filter_kwargs(kwargs, :align_ticks)
-        x,y,z = args
-        if aw != :y
-            x = x .- (x[2]-x[1])/2
+    aw = filter_kwargs!(kwargs, :align_ticks, false)
+    xtl = filter_kwargs!(kwargs, :xticklabels, nothing)
+    ytl = filter_kwargs!(kwargs, :yticklabels, nothing)
+    tickrotation = filter_kwargs!(kwargs, :tickrotation, 0)
+    xtickrotation = filter_kwargs!(kwargs, :xtickrotation, tickrotation)
+    ytickrotation = filter_kwargs!(kwargs, :ytickrotation, tickrotation)
+    xticker,yticker = if aw != false
+        x,y = if length(args) == 3
+            x,y,z = args
+            x,y
+        elseif length(args) == 1
+            z = args[1]
+            x = 1:size(z,2)
+            y = 1:size(z,1)
+            x,y
+        else
+            @warn "Don't know how to shift x/y axes in case of $(length(args)) `args`"
+            nothing,nothing
         end
-        if aw != :x
-            y = y .- (y[2]-y[1])/2
-        end
-        args = (x,y,z)
+        xt = !isnothing(x) && aw != :y ? () -> xticks(x .- (x[2]-x[1])/2,
+                                                     isnothing(xtl) ? x : xtl,
+                                                     rotation=xtickrotation) : () -> ()
+        yt = !isnothing(y) && aw != :x ? () -> yticks(y .- (y[2]-y[1])/2,
+                                                     isnothing(ytl) ? x : xtl,
+                                                     rotation=ytickrotation) : () -> ()
+        xt,yt
+    else
+        () -> (), () -> ()
     end
     p = pcolormesh(args...; kwargs...)
     margins(0,0)
+    xticker()
+    yticker()
     p
 end
 
@@ -161,9 +191,9 @@ plot_polar_map(r::AbstractVector, v::AbstractVector, nϕ::Integer, args...; kwar
 #                                                                       args...; kwargs...)
 # * Matrix plots
 
-function plot_matrix(a, args...; kwargs...)
+function plot_matrix(a, args...; align_ticks=true, kwargs...)
     aa = pycall(masked_array[:masked_equal], Any, Matrix(a), 0)
-    plot_map(aa, args...; kwargs...)
+    plot_map(aa, args...; align_ticks=align_ticks, kwargs...)
     gca()[:invert_yaxis]()
     square_axs()
 end
