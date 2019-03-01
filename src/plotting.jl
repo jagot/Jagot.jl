@@ -6,15 +6,15 @@ using PyCall
 const COL = PyNULL()
 const masked_array = PyNULL()
 const pgf_backend = PyNULL()
-# const pyplot_collections = PyNULL()
-# # const RegularPolyCollection = PyNULL()
+const pyplot_collections = PyNULL()
+const RegularPolyCollection = PyNULL()
 
 function __init__()
     copy!(COL, pyimport_conda("matplotlib.colors", "matplotlib"))
     copy!(masked_array, pyimport_conda("numpy.ma", "numpy"))
     copy!(pgf_backend, pyimport_conda("matplotlib.backends.backend_pgf", "matplotlib"))
-    # copy!(pyplot_collections, pyimport_conda("matplotlib.collections", "matplotlib"))
-    # # copy!(RegularPolyCollection, pyplot_collections[:RegularPolyCollection])
+    copy!(pyplot_collections, pyimport_conda("matplotlib.collections", "matplotlib"))
+    copy!(RegularPolyCollection, pyplot_collections.RegularPolyCollection)
 end
 
 using UnicodeFun
@@ -24,7 +24,7 @@ import Jagot: meshgrid
 # using GSL
 using Printf
 
-plot_style(style::String) = matplotlib[:style][:use](style)
+plot_style(style::String) = matplotlib.style.use(style)
 
 # * Figure wrappers
 import PyPlot: figure, subplot
@@ -33,7 +33,7 @@ function figure(fun::Function, args...; kwargs...)
     old_fig = gcf()
     figure(args...; kwargs...)
     fun()
-    figure(old_fig[:number])
+    figure(old_fig.number)
 end
 
 function subplot(fun::Function, args...; kwargs...)
@@ -66,7 +66,7 @@ end
 function Base.size(pyobj::PyCall.PyObject)
     :shape ∈ keys(pyobj) ||
         throw(ArgumentError("`:shape` not present among `PyObject`s `keys`."))
-    pyobj[:shape]
+    pyobj.shape
 end
 Base.size(pyobj::PyCall.PyObject, i) = size(pyobj)[i]
 
@@ -75,7 +75,7 @@ function plot_map(args...; kwargs...)
     set_default!(key, val) = (kwargs[key] = get(kwargs, key, val))
     kwargs[:cmap] = get_cmap(get(kwargs, :cmap, "viridis"))
     set_default!(:rasterized, true)
-    get(kwargs, :norm, :lin) == :log && (kwargs[:norm] = COL[:LogNorm]())
+    get(kwargs, :norm, :lin) == :log && (kwargs[:norm] = COL.LogNorm())
     aw = filter_kwargs!(kwargs, :align_ticks, false)
     xtl = filter_kwargs!(kwargs, :xticklabels, nothing)
     ytl = filter_kwargs!(kwargs, :yticklabels, nothing)
@@ -192,28 +192,28 @@ plot_polar_map(r::AbstractVector, v::AbstractVector, nϕ::Integer, args...; kwar
 # * Matrix plots
 
 function plot_matrix(a, args...; align_ticks=true, kwargs...)
-    aa = pycall(masked_array[:masked_equal], Any, Matrix(a), 0)
+    aa = pycall(masked_array.masked_equal, Any, Matrix(a), 0)
     plot_map(aa, args...; align_ticks=align_ticks, kwargs...)
-    gca()[:invert_yaxis]()
+    gca().invert_yaxis()
     square_axs()
 end
 
 # # Inspired by/stolen from
 # # https://github.com/tonysyu/mpltools/blob/master/mpltools/special/hinton.py
 
-# @pydef mutable struct SquareCollection <: pyplot_collections[:RegularPolyCollection]
+# @pydef mutable struct SquareCollection <: pyplot_collections.RegularPolyCollection
 #     __init__(self; kwargs...) = begin
-#         pyplot_collections[:RegularPolyCollection][:__init__](
+#         pyplot_collections.RegularPolyCollection.__init__(
 #             self, 4, rotation=pi/4; kwargs...
 #         )
 #     end
 #     get_transform(self) = begin
 #         """Return transform scaling circle areas to data space."""
-#         ax = self[:axes]
-#         pts2pixels = 72.0 / ax[:figure][:dpi]
-#         scale_x = pts2pixels * ax[:bbox][:width] / ax[:viewLim][:width]
-#         scale_y = pts2pixels * ax[:bbox][:height] / ax[:viewLim][:height]
-#         matplotlib[:transforms][:Affine2D]()[:scale](scale_x, scale_y)
+#         ax = self.axes
+#         pts2pixels = 72.0 / ax.figure.dpi
+#         scale_x = pts2pixels * ax.bbox.width / ax.viewLim.width
+#         scale_y = pts2pixels * ax.bbox.height / ax.viewLim.height
+#         matplotlib.transforms.Affine2D().scale(scale_x, scale_y)
 #     end
 # end
 
@@ -231,10 +231,10 @@ end
 #         pos_color == nothing && (pos_color="C0")
 #         neg_color == nothing && (neg_color="C1")
 #     end
-    
+
 #     ax = gca()
-#     ax[:set_facecolor](bg_color)
-    
+#     ax.set_facecolor(bg_color)
+
 #     height, width = size(a)
 #     if max_weight == nothing
 #         max_weight = 2^ceil(log2(maximum(abs, a)))
@@ -250,17 +250,17 @@ end
 #         if any(sel)
 #             xy = collect(zip(cols[sel], rows[sel]))
 #             circle_areas = π/2 * abs.(vals[sel])
-#             # squares = SquareCollection(sizes=circle_areas,
-#             #                            offsets=xy, transOffset=ax[:transData],
-#             #                            facecolor=color, edgecolor=color)
-#             # ax[:add_collection](squares, autolim=true)
+#             squares = SquareCollection(sizes=circle_areas,
+#                                        offsets=xy, transOffset=ax.transData,
+#                                        facecolor=color, edgecolor=color)
+#             ax.add_collection(squares, autolim=true)
 #         end
 #     end
 #     square_axs()
 #     grid(false)
-#     ax[:set_xlim](0.5, width+0.5)
-#     ax[:set_ylim](0.5, height+0.5)
-#     gca()[:invert_yaxis]()
+#     ax.set_xlim(0.5, width+0.5)
+#     ax.set_ylim(0.5, height+0.5)
+#     gca().invert_yaxis()
 #     ax
 # end
 # hinton_plot_matrix(a;kwargs...) = hinton_plot_matrix(full(a);kwargs...)
@@ -268,9 +268,9 @@ end
 # * LaTeX/font setup
 
 function set_pgf_to_pdf(preamble=[]; texsystem = "xelatex")
-    matplotlib[:rcdefaults]()
+    matplotlib.rcdefaults()
     ion()
-    matplotlib[:backend_bases][:register_backend]("pdf", pgf_backend.FigureCanvasPgf)
+    matplotlib.backend_bases.register_backend("pdf", pgf_backend.FigureCanvasPgf)
 
     set_latex_serif()
     rc("pgf";
@@ -432,23 +432,23 @@ function sci_ticks(ax, min=0, max=0)
 end
 
 function colorbar_sci_ticks(cb, min=0, max=0)
-    cb[:formatter][:set_scientific](true)
-    cb[:formatter][:set_powerlimits]((min, max))
-    cb[:update_ticks]()
+    cb.formatter.set_scientific(true)
+    cb.formatter.set_powerlimits((min, max))
+    cb.update_ticks()
 end
 
 function square_axs()
-    gca()[:set_aspect]("equal")
-    gca()[:autoscale](tight=true)
+    gca().set_aspect("equal")
+    gca().autoscale(tight=true)
 end
 
 function axes_labels_opposite(axis = :y, ax = gca())
     if axis == :y
-        ax[:yaxis][:tick_right]()
-        ax[:yaxis][:set_label_position]("right")
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
     else
-        ax[:xaxis][:tick_top]()
-        ax[:xaxis][:set_label_position]("top")
+        ax.xaxis.tick_top()
+        ax.xaxis.set_label_position("top")
     end
 end
 
@@ -458,9 +458,9 @@ function no_tick_labels(axis = :x, ax = gca(), ticks = false)
     else
         :left,:right,:labelleft,:labelright
     end
-    ax[:tick_params](; which="both",
-                     Dict(a => ticks, b => ticks,
-                          la => false, lb => false)...)
+    ax.tick_params(; which="both",
+                   Dict(a => ticks, b => ticks,
+                        la => false, lb => false)...)
 end
 
 # * Misc
@@ -472,20 +472,20 @@ function savefig_f(filename, args...; kwargs...)
     filename
 end
 
-reltext(x,y,string,args...;kwargs...) = text(x,y,string,transform=gca()[:transAxes],args...;kwargs...)
+reltext(x,y,string,args...;kwargs...) = text(x,y,string,transform=gca().transAxes,args...;kwargs...)
 
 function disp()
     display(gcf())
     println()
 end
 
-GridSpec = matplotlib[:gridspec][:GridSpec]
+GridSpec = matplotlib.gridspec.GridSpec
 
 # * ICC support
 include("save_pgf_with_icc.jl")
 
 # * Default settings
-hide_toolbar() = (matplotlib[:rcParams]["toolbar"] = nothing)
+hide_toolbar() = (matplotlib.rcParams["toolbar"] = nothing)
 
 # * Exports
 

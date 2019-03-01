@@ -25,12 +25,12 @@ function __init__()
 end
 
 function get_cmap(args...)
-    plt[:cm][:get_cmap](args...)
+    plt.cm.get_cmap(args...)
 end
 
 function (cmap::PyPlot.ColorMap)(i::Int)
     if :colors in keys(cmap)
-        vec(cmap[:colors][i,:])
+        vec(cmap.colors[i,:])
     else
         pycall(cmap, PyAny, i)
     end
@@ -45,7 +45,7 @@ function lerp(a::Tuple, b::Tuple, t)
 end
 
 function (cmap::PyPlot.ColorMap)(f::Real)
-    i = clamp(1+f*(cmap[:N]-1),1,cmap[:N])
+    i = clamp(1+f*(cmap.N-1),1,cmap.N)
     fl,ce = floor(Integer,i), ceil(Integer, i)
     lerp(cmap(fl),cmap(ce),f)
 end

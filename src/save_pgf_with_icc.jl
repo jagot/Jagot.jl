@@ -21,7 +21,7 @@ $(pgf_backend[:get_fontspec]())
     open("$(filebase).tex", "w") do file
         write(file, latex_source)
     end
-    tex_cmd = pgf_backend[:get_texcommand]()
+    tex_cmd = pgf_backend.get_texcommand()
     args = ["-interaction=nonstopmode", "-halt-on-error"]
     if tex_cmd in ["xetex", "xelatex"]
         println("WARNING: XeTeX is problematic")
