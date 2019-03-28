@@ -279,17 +279,14 @@ function set_pgf_to_pdf(preamble=[]; texsystem = "xelatex")
 end
 
 function set_font(; kwargs...)
-    keys = map(first, kwargs)
-
-    if :serif in keys
-        push!(kwargs, (:family, "serif"))
-    elseif :sans_serif in keys
-        push!(kwargs, (:family, "sans-serif"))
+    if :serif in keys(kwargs)
+        kwargs[:family] = "serif"
+    elseif :sans_serif in keys(kwargs)
+        kwargs[:family] = "sans-serif"
     end
 
-    for i in eachindex(kwargs)
-        kwargs[i] = (Symbol(replace(string(kwargs[i][1]), "_", "-")), kwargs[i][2])
-    end
+    kwargs = Dict(Symbol(replace(string(k), "_" => "-")) => v
+                  for (k,v) in kwargs)
 
     rc("font"; kwargs...)
 end
