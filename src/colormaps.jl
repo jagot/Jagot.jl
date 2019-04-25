@@ -29,7 +29,7 @@ function get_cmap(args...)
 end
 
 function (cmap::PyPlot.ColorMap)(i::Int)
-    if :colors in keys(cmap)
+    if :colors in propertynames(cmap)
         vec(cmap.colors[i,:])
     else
         pycall(cmap, PyAny, i)
