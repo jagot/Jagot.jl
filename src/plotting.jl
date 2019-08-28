@@ -63,13 +63,6 @@ function filter_kwargs!(kwargs, sym, default=nothing)
     v
 end
 
-function Base.size(pyobj::PyCall.PyObject)
-    :shape ∈ keys(pyobj) ||
-        throw(ArgumentError("`:shape` not present among `PyObject`s `keys`."))
-    pyobj.shape
-end
-Base.size(pyobj::PyCall.PyObject, i) = size(pyobj)[i]
-
 function plot_map(args...; kwargs...)
     kwargs = Dict{Symbol,Any}(kwargs)
     set_default!(key, val) = (kwargs[key] = get(kwargs, key, val))
