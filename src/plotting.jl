@@ -8,6 +8,7 @@ const masked_array = PyNULL()
 const pgf_backend = PyNULL()
 const pyplot_collections = PyNULL()
 const RegularPolyCollection = PyNULL()
+rcParams = 0
 
 function __init__()
     copy!(COL, pyimport_conda("matplotlib.colors", "matplotlib"))
@@ -15,6 +16,8 @@ function __init__()
     copy!(pgf_backend, pyimport_conda("matplotlib.backends.backend_pgf", "matplotlib"))
     copy!(pyplot_collections, pyimport_conda("matplotlib.collections", "matplotlib"))
     copy!(RegularPolyCollection, pyplot_collections.RegularPolyCollection)
+    global rcParams
+    rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 end
 
 using UnicodeFun
@@ -39,15 +42,25 @@ function ax_common(;nox=false, noy=false)
     end
 end
 
+function toggle_toolbar(visible)
+    rcParams["toolbar"] = visible ? "toolbar2" : "None"
+end
+
+toggle_statusbar(visible, fig=gcf()) = fig.canvas.window().statusBar().setVisible(visible)
+
 function cfigure(fun::Function, figname;
                  clear=true,
                  nox=false, noy=false,
-                 tight=true, kwargs...)
-    figure(figname; kwargs...)
+                 hide_bars=true, tight=true,
+                 kwargs...)
+    toggle_toolbar(!hide_bars)
+    fig = figure(figname; kwargs...)
     clear && clf()
     fun()
     ax_common(nox=nox, noy=noy)
+    toggle_statusbar(!hide_bars, fig)
     tight && tight_layout()
+    fig
 end
 
 function csubplot(fun::Function, args...; kwargs...)
@@ -511,19 +524,18 @@ GridSpec = matplotlib.gridspec.GridSpec
 # * ICC support
 include("save_pgf_with_icc.jl")
 
-# * Default settings
-hide_toolbar() = (matplotlib.rcParams["toolbar"] = nothing)
-
 # * Exports
 
-export plot_style, cfigure, csubplot,
+export plot_style,
+    toggle_toolbar, toggle_statusbar,
+    cfigure, csubplot,
     colormaps, colorbar_hack,
     plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix, hinton_plot_matrix,
     set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
     latex, latex_base10, base10,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks, colorbar_sci_ticks,
     square_axs, axes_labels_opposite, no_tick_labels,
-    pyslice, savefig_f, reltext, disp, hide_toolbar,
+    pyslice, savefig_f, reltext, disp,
     GridSpec
 
 end
