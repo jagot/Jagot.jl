@@ -184,9 +184,20 @@ plot_polar_map(r::AbstractVector, v::AbstractVector, nϕ::Integer, args...; kwar
 #                                                                       args...; kwargs...)
 # * Matrix plots
 
-function plot_matrix(a, args...; align_ticks=true, kwargs...)
-    aa = pycall(masked_array.masked_equal, Any, Matrix(a), 0)
-    plot_map(aa, args...; align_ticks=align_ticks, kwargs...)
+function plot_matrix(A::AbstractMatrix{T}, args...; align_ticks=true, bias=0.5, kwargs...) where T
+    vals = filter(!iszero, unique(A))
+    if T <: Complex
+        @warn "Plotting real part of complex-valued matrix"
+        vals = real(vals)
+    end
+    vmin,vmax = isempty(vals) ? (1,1) : extrema(vals)
+    if vmin == vmax
+        δ = 0.1abs(vmin)
+        vmin = vmin - 2bias*δ
+        vmax = vmax + 2*(1-bias)*δ
+    end
+    aa = pycall(masked_array.masked_equal, Any, Matrix(A), 0)
+    plot_map(aa, args...; align_ticks=align_ticks, vmin=vmin, vmax=vmax, kwargs...)
     gca().invert_yaxis()
     square_axs()
 end
