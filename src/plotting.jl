@@ -27,20 +27,34 @@ using Printf
 plot_style(style::String) = matplotlib.style.use(style)
 
 # * Figure wrappers
-import PyPlot: figure, subplot
 
-function figure(fun::Function, args...; kwargs...)
-    old_fig = gcf()
-    figure(args...; kwargs...)
-    fun()
-    figure(old_fig.number)
+function ax_common(;nox=false, noy=false)
+    if nox
+        no_tick_labels(:x)
+        xlabel("")
+    end
+    if noy
+        no_tick_labels(:y)
+        ylabel("")
+    end
 end
 
-function subplot(fun::Function, args...; kwargs...)
-    old_ax = gca()
-    subplot(args...; kwargs...)
+function cfigure(fun::Function, figname;
+                 clear=true,
+                 nox=false, noy=false,
+                 tight=true, kwargs...)
+    figure(figname; kwargs...)
+    clear && clf()
     fun()
-    sca(old_ax)
+    ax_common(nox=nox, noy=noy)
+    tight && tight_layout()
+end
+
+function csubplot(fun::Function, args...; kwargs...)
+    ax = subplot(args...)
+    fun()
+    ax_common(;kwargs...)
+    ax
 end
 
 # * Colormaps
@@ -502,7 +516,7 @@ hide_toolbar() = (matplotlib.rcParams["toolbar"] = nothing)
 
 # * Exports
 
-export plot_style, figure, subplot,
+export plot_style, cfigure, csubplot,
     colormaps, colorbar_hack,
     plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix, hinton_plot_matrix,
     set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
