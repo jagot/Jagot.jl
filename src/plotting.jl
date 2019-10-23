@@ -63,6 +63,17 @@ function filter_kwargs!(kwargs, sym, default=nothing)
     v
 end
 
+# Slightly ugly hack since `PyCall.size(o::PyObject)` returns the
+# _length_ of `o`.
+
+function shape(pyobj::PyCall.PyObject)
+    :shape ∈ keys(pyobj) ||
+        throw(ArgumentError("`:shape` not present among `PyObject`s `keys`."))
+    pyobj.shape
+end
+shape(pyobj::PyCall.PyObject, i) = shape(pyobj)[i]
+shape(a, args...) = size(a, args...)
+
 function plot_map(args...; kwargs...)
     kwargs = Dict{Symbol,Any}(kwargs)
     set_default!(key, val) = (kwargs[key] = get(kwargs, key, val))
@@ -81,8 +92,9 @@ function plot_map(args...; kwargs...)
             x,y
         elseif length(args) == 1
             z = args[1]
-            x = 1:size(z,2)
-            y = 1:size(z,1)
+            m,n = shape(z)
+            x = 1:n
+            y = 1:m
             x,y
         else
             @warn "Don't know how to shift x/y axes in case of $(length(args)) `args`"
