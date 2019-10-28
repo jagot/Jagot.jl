@@ -105,7 +105,14 @@ function plot_map(args...; kwargs...)
     kwargs = Dict{Symbol,Any}(kwargs)
     set_default!(key, val) = (kwargs[key] = get(kwargs, key, val))
     kwargs[:cmap] = get_cmap(get(kwargs, :cmap, "viridis"))
-    set_default!(:rasterized, true)
+
+    plot_fun = if filter_kwargs!(kwargs, :contour, false)
+        contourf
+    else
+        set_default!(:rasterized, true)
+        pcolormesh
+    end
+
     get(kwargs, :norm, :lin) == :log && (kwargs[:norm] = COL.LogNorm())
     aw = filter_kwargs!(kwargs, :align_ticks, false)
     xtl = filter_kwargs!(kwargs, :xticklabels, nothing)
@@ -137,7 +144,7 @@ function plot_map(args...; kwargs...)
     else
         () -> (), () -> ()
     end
-    p = pcolormesh(args...; kwargs...)
+    p = plot_fun(args...; kwargs...)
     margins(0,0)
     xticker()
     yticker()
