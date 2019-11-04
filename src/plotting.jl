@@ -2,6 +2,7 @@
 module plotting
 using PyPlot
 using PyCall
+using Compat
 
 const COL = PyNULL()
 const masked_array = PyNULL()
