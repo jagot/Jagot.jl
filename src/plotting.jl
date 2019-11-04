@@ -46,7 +46,7 @@ function toggle_toolbar(visible)
     rcParams["toolbar"] = visible ? "toolbar2" : "None"
 end
 
-toggle_statusbar(visible, fig=gcf()) = fig.canvas.window().statusBar().setVisible(visible)
+toggle_statusbar(visible, fig=gcf()) = hasproperty(fig.canvas, :window) && fig.canvas.window().statusBar().setVisible(visible)
 
 function cfigure(fun::Function, figname;
                  clear=true,
