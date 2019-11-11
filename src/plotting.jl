@@ -529,6 +529,12 @@ end
 
 GridSpec = matplotlib.gridspec.GridSpec
 
+# https://stackoverflow.com/a/51207905/1079038
+function next_color(ax=gca())
+    pc = ax._get_lines.prop_cycler
+    first(pc)["color"]
+end
+
 # * ICC support
 include("save_pgf_with_icc.jl")
 
@@ -544,6 +550,6 @@ export plot_style,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks, colorbar_sci_ticks,
     square_axs, axes_labels_opposite, no_tick_labels,
     pyslice, savefig_f, reltext, disp,
-    GridSpec
+    GridSpec, next_color
 
 end
