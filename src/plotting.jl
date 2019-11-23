@@ -316,6 +316,20 @@ end
 # end
 # hinton_plot_matrix(a;kwargs...) = hinton_plot_matrix(full(a);kwargs...)
 
+# * Patches
+
+function draw_patch(kind, args...; ax=gca(), kwargs...)
+    p = getproperty(matplotlib.patches, kind)
+    ax.add_patch(p(args...; kwargs...))
+end
+
+draw_ellipse((x,y), w, h; kwargs...) = draw_patch(:Ellipse, (x,y), w, h; kwargs...)
+draw_circle((x,y), r; kwargs...) = draw_ellipse((x,y), r, r; kwargs...)
+draw_arc((x,y), w, h, ϕ, θ₁, θ₂; kwargs...) =
+    draw_patch(:Arc, (x,y), w, h, ϕ, θ₁, θ₂; kwargs...)
+draw_arc((x,y), r, ϕ, θ₁, θ₂; kwargs...) =
+    draw_arc((x,y), r, r, ϕ, θ₁, θ₂; kwargs...)
+
 # * LaTeX/font setup
 
 function set_pgf_to_pdf(preamble=[]; texsystem = "xelatex")
@@ -545,6 +559,7 @@ export plot_style,
     cfigure, csubplot,
     colormaps, colorbar_hack,
     plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix, hinton_plot_matrix,
+    draw_patch, draw_ellipse, draw_circle, draw_arc,
     set_pgf_to_pdf, set_font, set_times_new_roman, set_latex_serif,
     latex, latex_base10, base10,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks, colorbar_sci_ticks,
