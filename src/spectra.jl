@@ -1,5 +1,5 @@
 module spectra
-using DSP
+using FFTW
 
 get_freq(t, fs) = fftshift(fftfreq(round(Int,fs*(maximum(t)-minimum(t)))+1, fs))
 get_freq(t) = get_freq(t, 1.0/(t[2]-t[1]))

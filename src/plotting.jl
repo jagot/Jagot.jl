@@ -383,7 +383,7 @@ end
 function latex(o)
     io = IOBuffer()
     show(io, MIME"text/latex"(), o)
-    takebuf_string(io)
+    String(take!(io))
 end
 
 # * Scientific notation
