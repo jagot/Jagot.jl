@@ -525,6 +525,50 @@ function no_tick_labels(axis = :x, ax = gca(), ticks = false)
                         la => false, lb => false)...)
 end
 
+# ** Sqrt axes
+
+mticker = matplotlib.ticker
+
+@pydef mutable struct SqrtTransform <: matplotlib.transforms.Transform
+    input_dims = 1
+    output_dims = 1
+    is_separable = true
+    has_inverse = true
+    __init__(self) = matplotlib.transforms.Transform.__init__(self)
+    transform_non_affine(self, a) = begin
+        v = similar(a)
+        sel = a .>= 0
+        v[sel] .= .√(a[sel])
+        # v[.!sel] .= NaN
+        v
+    end
+    inverted(self) = SquareTransform()
+end
+
+@pydef mutable struct SquareTransform <: matplotlib.transforms.Transform
+    input_dims = 1
+    output_dims = 1
+    is_separable = true
+    has_inverse = true
+    __init__(self) = matplotlib.transforms.Transform.__init__(self)
+    transform_non_affine(self, a) = a .^ 2
+    inverted(self) = SqrtTransform()
+end
+
+@pydef mutable struct SqrtScale <: matplotlib.scale.ScaleBase
+    name="sqrt"
+    __init__(self, axis, args...; kwargs...) = begin
+        matplotlib.scale.ScaleBase.__init__(axis)
+    end
+    get_transform(self) = SqrtTransform()
+    set_default_locators_and_formatters(self, axis) = nothing
+    limit_range_for_scale(self, vmin, vmax, minpos) = begin
+        max(vmin, 0), max(vmax, 0)
+    end
+end
+
+matplotlib.scale.register_scale(SqrtScale)
+
 # * Misc
 
 pyslice(args...) = pycall(pybuiltin("slice"), PyObject, args...)
