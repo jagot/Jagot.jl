@@ -451,22 +451,23 @@ function π_frac_string(i; pi_sym = "\\pi")
     end
 end
 
-function π_labels(ax = :x, max_count = 10; pi_sym = "\\pi")
-    lims = gca()[ax == :x ? :get_xlim : :get_ylim]()
-    f = 2
-    mi,ma = map(l -> trunc(Int, l/(π/2)), lims)
+function π_labels(ax = :x; max_count = 10, divisor=4,
+                  pi_sym = "\\pi", ca=gca())
+    lims = ca[ax == :x ? :get_xlim : :get_ylim]()
+    f = divisor
+    mi,ma = map(l -> trunc(Int, l/(π/divisor)), lims)
     if ma-mi > max_count
         f = 1
         mi,ma = map(l -> trunc(Int, l/π), lims)
     end
     d = round(Int, max((ma-mi)/max_count,1))
     r = (mi:d:ma)//f
-    gca()[ax == :x ? :set_xticks : :set_yticks](collect(r)*π)
+    ca[ax == :x ? :set_xticks : :set_yticks](collect(r)*π)
 
     tick_labels = map(r) do i
         π_frac_string(i, pi_sym = pi_sym)
     end
-    gca()[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
+    ca[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
 end
 
 function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x; sfrac = false)
