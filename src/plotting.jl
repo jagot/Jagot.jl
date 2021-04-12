@@ -64,8 +64,8 @@ function cfigure(fun::Function, figname;
     fig
 end
 
-function csubplot(fun::Function, args...; kwargs...)
-    ax = subplot(args...)
+function csubplot(fun::Function, args...; projection=nothing, kwargs...)
+    ax = subplot(args...; projection=projection)
     fun()
     ax_common(;kwargs...)
     ax
