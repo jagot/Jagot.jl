@@ -107,6 +107,8 @@ function plot_map(args...; kwargs...)
     set_default!(key, val) = (kwargs[key] = get(kwargs, key, val))
     kwargs[:cmap] = get_cmap(get(kwargs, :cmap, "viridis"))
 
+    set_default!(:shading, "auto")
+
     plot_fun = if filter_kwargs!(kwargs, :contour, false)
         contourf
     else
