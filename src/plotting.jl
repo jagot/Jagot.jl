@@ -116,7 +116,11 @@ function plot_map(args...; kwargs...)
         pcolormesh
     end
 
-    get(kwargs, :norm, :lin) == :log && (kwargs[:norm] = COL.LogNorm())
+    vmin = filter_kwargs!(kwargs, :vmin, nothing)
+    vmax = filter_kwargs!(kwargs, :vmax, nothing)
+    kwargs[:norm] = (get(kwargs, :norm, :lin) == :lin ?
+                     COL.Normalize(vmin, vmax) :
+                     COL.LogNorm(vmin, vmax))
     aw = filter_kwargs!(kwargs, :align_ticks, false)
     xtl = filter_kwargs!(kwargs, :xticklabels, nothing)
     ytl = filter_kwargs!(kwargs, :yticklabels, nothing)
