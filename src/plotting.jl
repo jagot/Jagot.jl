@@ -71,6 +71,28 @@ function csubplot(fun::Function, args...; projection=nothing, kwargs...)
     ax
 end
 
+function subplot_ratio(N, r; verbosity=0, max_iter=100)
+    verbosity > 0 && @info "Generating at least $(N) subplots with approximate width/height ratio of $(r)"
+    a = √(N/r)
+    b = √(r*N)
+    verbosity > 1 && @info "Initial guess" a b a*b b/a
+    a = round(Int, a)
+    b = round(Int, b)
+    verbosity > 1 && @info "Initial guess, rounded" a b a*b b/a
+    a*b ≥ N && return a,b
+    i = 0
+    while a*b < N && i < max_iter
+        a, b = if abs((b+1)/a - r) < abs(b/(a+1) - r)
+            a, b+1
+        else
+            a+1, b
+        end
+        i += 1
+        verbosity > 2 && @info "Iteration" a b a*b b/a i
+    end
+    a, b
+end
+
 # * Colormaps
 
 include("colormaps.jl")
@@ -607,7 +629,7 @@ include("save_pgf_with_icc.jl")
 
 export plot_style,
     toggle_toolbar, toggle_statusbar,
-    cfigure, csubplot,
+    cfigure, csubplot, subplot_ratio,
     colormaps, colorbar_hack,
     plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix, hinton_plot_matrix,
     draw_patch, draw_ellipse, draw_circle, draw_arc,
