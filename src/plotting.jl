@@ -145,7 +145,7 @@ function plot_map(args...; kwargs...)
                                                      isnothing(xtl) ? x : xtl,
                                                      rotation=xtickrotation) : () -> ()
         yt = !isnothing(y) && aw != :x ? () -> yticks(y .- (y[2]-y[1])/2,
-                                                     isnothing(ytl) ? x : xtl,
+                                                     isnothing(ytl) ? y : ytl,
                                                      rotation=ytickrotation) : () -> ()
         xt,yt
     else
