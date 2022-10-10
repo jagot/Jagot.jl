@@ -71,6 +71,11 @@ function csubplot(fun::Function, args...; projection=nothing, kwargs...)
     ax
 end
 
+function csubplot(fun::Function, m::Integer, n::Integer, (i,j)::Tuple{Integer,Integer}, args...; kwargs...)
+    LI = LinearIndices((n,m))'
+    csubplot(fun, m, n, LI[i,j], args...; kwargs...)
+end
+
 function subplot_ratio(N, r; verbosity=0, max_iter=100)
     verbosity > 0 && @info "Generating at least $(N) subplots with approximate width/height ratio of $(r)"
     a = √(N/r)
