@@ -64,12 +64,15 @@ function cfigure(fun::Function, figname;
     fig
 end
 
-function csubplot(fun::Function, args...; projection=nothing, kwargs...)
-    ax = subplot(args...; projection=projection)
+function csubplot(fun::Function, ax::PyObject, args...; kwargs...)
+    sca(ax)
     fun()
     ax_common(;kwargs...)
     ax
 end
+
+csubplot(fun::Function, args...; projection=nothing, kwargs...) =
+    csubplot(fun, subplot(args...; projection=projection), args...; kwargs...)
 
 function csubplot(fun::Function, m::Integer, n::Integer, (i,j)::Tuple{Integer,Integer}, args...; kwargs...)
     LI = LinearIndices((n,m))'
@@ -97,6 +100,24 @@ function subplot_ratio(N, r; verbosity=0, max_iter=100)
     end
     a, b
 end
+
+# ** GridSpec
+
+grid_spec(fig::PyPlot.Figure, args...; kwargs...) =
+    fig.add_gridspec(args...; kwargs...)
+
+grid_spec(gr::PyPlot.PyObject, args...; kwargs...) =
+    gr.subgridspec(args...; kwargs...)
+
+clear_figure!(fig::PyPlot.Figure) = fig.clf()
+clear_figure!(gr::PyPlot.PyObject) =
+    clear_figure!(gr.get_gridspec().figure)
+clear_figure!(::Any) = nothing
+
+tight_layout!(fig::PyPlot.Figure) = fig.tight_layout()
+tight_layout!(gr::PyPlot.PyObject) =
+    tight_layout!(gr.get_gridspec().figure)
+tight_layout!(::Any) = nothing
 
 # * Colormaps
 
@@ -635,6 +656,7 @@ include("save_pgf_with_icc.jl")
 export plot_style,
     toggle_toolbar, toggle_statusbar,
     cfigure, csubplot, subplot_ratio,
+    grid_spec, clear_figure!, tight_layout!,
     colormaps, colorbar_hack,
     plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix, hinton_plot_matrix,
     draw_patch, draw_ellipse, draw_circle, draw_arc,
