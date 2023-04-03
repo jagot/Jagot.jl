@@ -671,6 +671,9 @@ end
 # * ICC support
 include("save_pgf_with_icc.jl")
 
+# * PythonPlot recipes
+include("python_plot_recipes.jl")
+
 # * Exports
 
 export plot_style,
