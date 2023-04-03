@@ -1,0 +1,3 @@
+[deps]
+matplotlib = ">=3"
+numpy = ">=1"

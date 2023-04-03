@@ -15,20 +15,16 @@
 # Adapted for Julia by Jagot
 
 module colormaps
-using PyCall
-using PyPlot
+using PythonCall
+using PythonPlot
 
-const COL = PyNULL()
+const COL = PythonCall.pynew()
 
 function __init__()
-    copy!(COL, pyimport_conda("matplotlib.colors", "matplotlib"))
+    PythonCall.pycopy!(COL, pyimport("matplotlib.colors"))
 end
 
-function get_cmap(args...)
-    plt.cm.get_cmap(args...)
-end
-
-function (cmap::PyPlot.ColorMap)(i::Int)
+function (cmap::PythonPlot.ColorMap)(i::Int)
     if :colors in propertynames(cmap)
         vec(cmap.colors[i,:])
     else
@@ -44,15 +40,13 @@ function lerp(a::Tuple, b::Tuple, t)
     tuple([lerp(a[i],b[i],t) for i = 1:length(a)]...)
 end
 
-function (cmap::PyPlot.ColorMap)(f::Real)
+function (cmap::PythonPlot.ColorMap)(f::Real)
     i = clamp(1+f*(cmap.N-1),1,cmap.N)
     fl,ce = floor(Integer,i), ceil(Integer, i)
     lerp(cmap(fl),cmap(ce),f)
 end
 
-(cmap::PyPlot.ColorMap)(i::Integer, l::Integer) =
+(cmap::PythonPlot.ColorMap)(i::Integer, l::Integer) =
     l > 1 ? cmap((i-1)/(l-1)) : cmap(0.5)
-
-export get_cmap, call
 
 end

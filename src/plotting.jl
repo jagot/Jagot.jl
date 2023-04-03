@@ -1,24 +1,24 @@
 # * Setup
 module plotting
-using PyPlot
-using PyCall
+using PythonPlot
+using PythonCall
 using Compat
 
-const COL = PyNULL()
-const masked_array = PyNULL()
-const pgf_backend = PyNULL()
-const pyplot_collections = PyNULL()
-const RegularPolyCollection = PyNULL()
-rcParams = 0
+const COL = PythonCall.pynew()
+const masked_array = PythonCall.pynew()
+const pgf_backend = PythonCall.pynew()
+const pyplot_collections = PythonCall.pynew()
+const RegularPolyCollection = PythonCall.pynew()
+rcParams = PythonCall.pynew()
 
 function __init__()
-    copy!(COL, pyimport_conda("matplotlib.colors", "matplotlib"))
-    copy!(masked_array, pyimport_conda("numpy.ma", "numpy"))
-    copy!(pgf_backend, pyimport_conda("matplotlib.backends.backend_pgf", "matplotlib"))
-    copy!(pyplot_collections, pyimport_conda("matplotlib.collections", "matplotlib"))
-    copy!(RegularPolyCollection, pyplot_collections.RegularPolyCollection)
+    PythonCall.pycopy!(COL, pyimport("matplotlib.colors"))
+    PythonCall.pycopy!(masked_array, pyimport("numpy.ma"))
+    PythonCall.pycopy!(pgf_backend, pyimport("matplotlib.backends.backend_pgf"))
+    PythonCall.pycopy!(pyplot_collections, pyimport("matplotlib.collections"))
+    PythonCall.pycopy!(RegularPolyCollection, pyplot_collections.RegularPolyCollection)
     global rcParams
-    rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
+    PythonCall.pycopy!(rcParams, pyplot.matplotlib.rcParams)
 end
 
 using UnicodeFun
@@ -64,7 +64,7 @@ function cfigure(fun::Function, figname;
     fig
 end
 
-function csubplot(fun::Function, ax::PyObject, args...; kwargs...)
+function csubplot(fun::Function, ax::Py, args...; kwargs...)
     sca(ax)
     fun()
     ax_common(;kwargs...)
@@ -103,19 +103,21 @@ end
 
 # ** GridSpec
 
-grid_spec(fig::PyPlot.Figure, args...; kwargs...) =
+grid_spec(fig::Figure, args...; kwargs...) =
     fig.add_gridspec(args...; kwargs...)
 
-grid_spec(gr::PyPlot.PyObject, args...; kwargs...) =
+grid_spec(gr::PythonCall.Py, args...; kwargs...) =
     gr.subgridspec(args...; kwargs...)
 
-clear_figure!(fig::PyPlot.Figure) = fig.clf()
-clear_figure!(gr::PyPlot.PyObject) =
+gr_sub_plots(gr::PythonCall.Py) = pyconvert(Array, gr.subplots())
+
+clear_figure!(fig::Figure) = fig.clf()
+clear_figure!(gr::PythonCall.Py) =
     clear_figure!(gr.get_gridspec().figure)
 clear_figure!(::Any) = nothing
 
-tight_layout!(fig::PyPlot.Figure) = fig.tight_layout()
-tight_layout!(gr::PyPlot.PyObject) =
+tight_layout!(fig::Figure) = fig.tight_layout()
+tight_layout!(gr::PythonCall.Py) =
     tight_layout!(gr.get_gridspec().figure)
 tight_layout!(::Any) = nothing
 
@@ -139,15 +141,15 @@ function filter_kwargs!(kwargs, sym, default=nothing)
     v
 end
 
-# Slightly ugly hack since `PyCall.size(o::PyObject)` returns the
+# Slightly ugly hack since `size(o::Py)` returns the
 # _length_ of `o`.
 
-function shape(pyobj::PyCall.PyObject)
-    :shape ∈ keys(pyobj) ||
-        throw(ArgumentError("`:shape` not present among `PyObject`s `keys`."))
-    pyobj.shape
+function shape(pyobj::Py)
+    pyhasattr(pyobj, "shape") ||
+        throw(ArgumentError("`:shape` not present among `Py`s `attrs`."))
+    pyconvert(Tuple, pyobj.shape)
 end
-shape(pyobj::PyCall.PyObject, i) = shape(pyobj)[i]
+shape(pyobj::Py, i) = shape(pyobj)[i]
 shape(a, args...) = size(a, args...)
 
 function plot_map(args...; kwargs...)
@@ -297,7 +299,7 @@ function plot_matrix(A::AbstractMatrix{T}, args...; align_ticks=true, bias=0.5, 
         vmin = vmin - 2bias*δ
         vmax = vmax + 2*(1-bias)*δ
     end
-    aa = pycall(masked_array.masked_equal, Any, Matrix(A), 0)
+    aa = pycall(masked_array.masked_equal, Matrix(A), 0)
     plot_map(aa, args...; align_ticks=align_ticks, vmin=vmin, vmax=vmax, kwargs...)
     gca().invert_yaxis()
     square_axs()
@@ -477,16 +479,16 @@ base10(v::Vector) = map(base10, v)
 
 function axis_add_ticks(ticks, labels, ax = :x; kwargs...)
     a = gca()
-    a2 = a[ax == :x ? :twiny : :twinx]()
-    a2[ax == :x ? :set_xlim : :set_ylim](a[ax == :x ? :get_xlim : :get_ylim]())
-    a2[ax == :x ? :set_xscale : :set_yscale](a[ax == :x ? :get_xscale : :get_yscale]())
-    a2[ax == :x ? :set_xticks : :set_yticks](vec(collect(ticks)))
-    a2[ax == :x ? :set_xticklabels : :set_yticklabels](vec(collect(labels)); kwargs...)
+    a2 = getproperty(a, ax == :x ? :twiny : :twinx)()
+    getproperty(a2, ax == :x ? :set_xlim : :set_ylim)(getproperty(a, ax == :x ? :get_xlim : :get_ylim)())
+    getproperty(a2, ax == :x ? :set_xscale : :set_yscale)(getproperty(a, ax == :x ? :get_xscale : :get_yscale)())
+    getproperty(a2, ax == :x ? :set_xticks : :set_yticks)(vec(collect(ticks)))
+    getproperty(a2, ax == :x ? :set_xticklabels : :set_yticklabels)(vec(collect(labels)); kwargs...)
     sca(a)
 end
 
 function set_ticklabel_props(ax=:x; kwargs...)
-    labels = gca()[ax == :x ? :get_xticklabels : :get_yticklabels]()
+    labels = getproperty(gca(), ax == :x ? :get_xticklabels : :get_yticklabels)()
     setp(labels; kwargs...)
 end
 
@@ -505,7 +507,7 @@ end
 
 function π_labels(ax = :x; max_count = 10, divisor=4,
                   pi_sym = "\\pi", ca=gca())
-    lims = ca[ax == :x ? :get_xlim : :get_ylim]()
+    lims = pyconvert(Tuple, getproperty(ca, ax == :x ? :get_xlim : :get_ylim)())
     f = divisor
     mi,ma = map(l -> trunc(Int, l/(π/divisor)), lims)
     if ma-mi > max_count
@@ -514,19 +516,20 @@ function π_labels(ax = :x; max_count = 10, divisor=4,
     end
     d = round(Int, max((ma-mi)/max_count,1))
     r = (mi:d:ma)//f
-    ca[ax == :x ? :set_xticks : :set_yticks](collect(r)*π)
+    getproperty(ca, ax == :x ? :set_xticks : :set_yticks)(collect(r)*π)
 
     tick_labels = map(r) do i
         π_frac_string(i, pi_sym = pi_sym)
     end
-    ca[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
+    getproperty(ca, ax == :x ? :set_xticklabels : :set_yticklabels)(tick_labels)
 end
 
 function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x; sfrac = false)
+    fts = float(ts)
     if axis == :x
-        xticks(ts)
+        xticks(fts)
     else
-        yticks(ts)
+        yticks(fts)
     end
     tls = map(ts) do t
         if t == 0
@@ -541,7 +544,7 @@ function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x; sfrac = false)
             end
         end
     end
-    gca()[axis == :x ? :set_xticklabels : :set_yticklabels](tls)
+    getproperty(gca(), axis == :x ? :set_xticklabels : :set_yticklabels)(tls)
 end
 
 function sci_ticks(ax, min=0, max=0)
@@ -584,49 +587,69 @@ end
 
 mticker = matplotlib.ticker
 
-@pydef mutable struct SqrtTransform <: matplotlib.transforms.Transform
-    input_dims = 1
-    output_dims = 1
-    is_separable = true
-    has_inverse = true
-    __init__(self) = matplotlib.transforms.Transform.__init__(self)
-    transform_non_affine(self, a) = begin
-        v = similar(a)
-        sel = a .>= 0
-        v[sel] .= .√(a[sel])
-        # v[.!sel] .= NaN
-        v
-    end
-    inverted(self) = SquareTransform()
-end
+SqrtTransform = pytype("SqrtTransform", (matplotlib.transforms.Transform,), [
+    "__module__" => "__main__",
+    pyfunc(name="__init__",
+           function (self)
+               self.input_dims = 1
+               self.output_dims = 1
+               self.is_separable = true
+               self.has_inverse = true
+               matplotlib.transforms.Transform.__init__(self)
+           end),
+    pyfunc(name="transform_non_affine",
+           function(self, a)
+               b = pyconvert(Array, a)
+               v = similar(b)
+               sel = b .>= 0
+               v[sel] .= .√(b[sel])
+               # v[.!sel] .= NaN
+               v
+           end),
+    pyfunc(name="inverted",
+           (self) -> SquareTransform())
+])
 
-@pydef mutable struct SquareTransform <: matplotlib.transforms.Transform
-    input_dims = 1
-    output_dims = 1
-    is_separable = true
-    has_inverse = true
-    __init__(self) = matplotlib.transforms.Transform.__init__(self)
-    transform_non_affine(self, a) = a .^ 2
-    inverted(self) = SqrtTransform()
-end
+SquareTransform = pytype("SquareTransform", (matplotlib.transforms.Transform,), [
+    "__module__" => "__main__",
+    pyfunc(name="__init__",
+           function (self)
+               self.input_dims = 1
+               self.output_dims = 1
+               self.is_separable = true
+               self.has_inverse = true
+               matplotlib.transforms.Transform.__init__(self)
+           end),
+    pyfunc(name="transform_non_affine",
+           function(self, a)
+               pyconvert(Array, a) .^ 2
+           end),
+    pyfunc(name="inverted",
+           (self) -> SqrtTransform())
+])
 
-@pydef mutable struct SqrtScale <: matplotlib.scale.ScaleBase
-    name="sqrt"
-    __init__(self, axis, args...; kwargs...) = begin
-        matplotlib.scale.ScaleBase.__init__(axis)
-    end
-    get_transform(self) = SqrtTransform()
-    set_default_locators_and_formatters(self, axis) = nothing
-    limit_range_for_scale(self, vmin, vmax, minpos) = begin
-        max(vmin, 0), max(vmax, 0)
-    end
-end
+SqrtScale = pytype("SqrtScale", (matplotlib.scale.ScaleBase,), [
+    "__module__" => "__main__",
+    "name" => "sqrt",
+    pyfunc(name="__init__",
+           function(self, axis, args...; kwargs...)
+               matplotlib.scale.ScaleBase.__init__(self, axis)
+           end),
+    pyfunc(name="get_transform",
+           (self) -> SqrtTransform()),
+    pyfunc(name="set_default_locators_and_formatters",
+           (self, axis) -> nothing),
+    pyfunc(name="limit_range_for_scale",
+           function(self, vmin, vmax, minpos)
+               max(vmin, 0), max(vmax, 0)
+           end)])
 
+# https://github.com/cjdoris/PythonCall.jl/issues/289
 matplotlib.scale.register_scale(SqrtScale)
 
 # * Misc
 
-pyslice(args...) = pycall(pybuiltin("slice"), PyObject, args...)
+# pyslice(args...) = pycall(pybuiltin("slice"), Py, args...)
 
 function savefig_f(filename, args...; kwargs...)
     savefig(filename, args...; kwargs...)
@@ -651,12 +674,15 @@ end
 # * ICC support
 include("save_pgf_with_icc.jl")
 
+# * PythonPlot recipes
+include("python_plot_recipes.jl")
+
 # * Exports
 
 export plot_style,
     toggle_toolbar, toggle_statusbar,
     cfigure, csubplot, subplot_ratio,
-    grid_spec, clear_figure!, tight_layout!,
+    grid_spec, gr_sub_plots, clear_figure!, tight_layout!,
     colormaps, colorbar_hack,
     plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix, hinton_plot_matrix,
     draw_patch, draw_ellipse, draw_circle, draw_arc,
@@ -664,7 +690,8 @@ export plot_style,
     latex, latex_base10, base10,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks, colorbar_sci_ticks,
     square_axs, axes_labels_opposite, no_tick_labels,
-    pyslice, savefig_f, reltext, disp,
+    # pyslice,
+    savefig_f, reltext, disp,
     GridSpec, next_color
 
 end
