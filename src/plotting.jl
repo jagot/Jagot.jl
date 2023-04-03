@@ -109,6 +109,8 @@ grid_spec(fig::Figure, args...; kwargs...) =
 grid_spec(gr::PythonCall.Py, args...; kwargs...) =
     gr.subgridspec(args...; kwargs...)
 
+gr_sub_plots(gr::PythonCall.Py) = pyconvert(Array, gr.subplots())
+
 clear_figure!(fig::Figure) = fig.clf()
 clear_figure!(gr::PythonCall.Py) =
     clear_figure!(gr.get_gridspec().figure)
@@ -143,9 +145,9 @@ end
 # _length_ of `o`.
 
 function shape(pyobj::Py)
-    :shape ∈ keys(pyobj) ||
-        throw(ArgumentError("`:shape` not present among `Py`s `keys`."))
-    pyobj.shape
+    pyhasattr(pyobj, "shape") ||
+        throw(ArgumentError("`:shape` not present among `Py`s `attrs`."))
+    pyconvert(Tuple, pyobj.shape)
 end
 shape(pyobj::Py, i) = shape(pyobj)[i]
 shape(a, args...) = size(a, args...)
@@ -297,7 +299,7 @@ function plot_matrix(A::AbstractMatrix{T}, args...; align_ticks=true, bias=0.5, 
         vmin = vmin - 2bias*δ
         vmax = vmax + 2*(1-bias)*δ
     end
-    aa = pycall(masked_array.masked_equal, Any, Matrix(A), 0)
+    aa = pycall(masked_array.masked_equal, Matrix(A), 0)
     plot_map(aa, args...; align_ticks=align_ticks, vmin=vmin, vmax=vmax, kwargs...)
     gca().invert_yaxis()
     square_axs()
@@ -477,16 +479,16 @@ base10(v::Vector) = map(base10, v)
 
 function axis_add_ticks(ticks, labels, ax = :x; kwargs...)
     a = gca()
-    a2 = a[ax == :x ? :twiny : :twinx]()
-    a2[ax == :x ? :set_xlim : :set_ylim](a[ax == :x ? :get_xlim : :get_ylim]())
-    a2[ax == :x ? :set_xscale : :set_yscale](a[ax == :x ? :get_xscale : :get_yscale]())
-    a2[ax == :x ? :set_xticks : :set_yticks](vec(collect(ticks)))
-    a2[ax == :x ? :set_xticklabels : :set_yticklabels](vec(collect(labels)); kwargs...)
+    a2 = getproperty(a, ax == :x ? :twiny : :twinx)()
+    getproperty(a2, ax == :x ? :set_xlim : :set_ylim)(getproperty(a, ax == :x ? :get_xlim : :get_ylim)())
+    getproperty(a2, ax == :x ? :set_xscale : :set_yscale)(getproperty(a, ax == :x ? :get_xscale : :get_yscale)())
+    getproperty(a2, ax == :x ? :set_xticks : :set_yticks)(vec(collect(ticks)))
+    getproperty(a2, ax == :x ? :set_xticklabels : :set_yticklabels)(vec(collect(labels)); kwargs...)
     sca(a)
 end
 
 function set_ticklabel_props(ax=:x; kwargs...)
-    labels = gca()[ax == :x ? :get_xticklabels : :get_yticklabels]()
+    labels = getproperty(gca(), ax == :x ? :get_xticklabels : :get_yticklabels)()
     setp(labels; kwargs...)
 end
 
@@ -505,7 +507,7 @@ end
 
 function π_labels(ax = :x; max_count = 10, divisor=4,
                   pi_sym = "\\pi", ca=gca())
-    lims = ca[ax == :x ? :get_xlim : :get_ylim]()
+    lims = pyconvert(Tuple, getproperty(ca, ax == :x ? :get_xlim : :get_ylim)())
     f = divisor
     mi,ma = map(l -> trunc(Int, l/(π/divisor)), lims)
     if ma-mi > max_count
@@ -514,19 +516,20 @@ function π_labels(ax = :x; max_count = 10, divisor=4,
     end
     d = round(Int, max((ma-mi)/max_count,1))
     r = (mi:d:ma)//f
-    ca[ax == :x ? :set_xticks : :set_yticks](collect(r)*π)
+    getproperty(ca, ax == :x ? :set_xticks : :set_yticks)(collect(r)*π)
 
     tick_labels = map(r) do i
         π_frac_string(i, pi_sym = pi_sym)
     end
-    ca[ax == :x ? :set_xticklabels : :set_yticklabels](tick_labels)
+    getproperty(ca, ax == :x ? :set_xticklabels : :set_yticklabels)(tick_labels)
 end
 
 function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x; sfrac = false)
+    fts = float(ts)
     if axis == :x
-        xticks(ts)
+        xticks(fts)
     else
-        yticks(ts)
+        yticks(fts)
     end
     tls = map(ts) do t
         if t == 0
@@ -541,7 +544,7 @@ function frac_ticks(ts::AbstractVector{Rational{Int}}, axis = :x; sfrac = false)
             end
         end
     end
-    gca()[axis == :x ? :set_xticklabels : :set_yticklabels](tls)
+    getproperty(gca(), axis == :x ? :set_xticklabels : :set_yticklabels)(tls)
 end
 
 function sci_ticks(ax, min=0, max=0)
@@ -679,7 +682,7 @@ include("python_plot_recipes.jl")
 export plot_style,
     toggle_toolbar, toggle_statusbar,
     cfigure, csubplot, subplot_ratio,
-    grid_spec, clear_figure!, tight_layout!,
+    grid_spec, gr_sub_plots, clear_figure!, tight_layout!,
     colormaps, colorbar_hack,
     plot_map, plot_polar_map, spherical_harmonic_plot, plot_matrix, hinton_plot_matrix,
     draw_patch, draw_ellipse, draw_circle, draw_arc,
