@@ -1,24 +1,24 @@
 # * Setup
 module plotting
-using PyPlot
-using PyCall
+using PythonPlot
+using PythonCall
 using Compat
 
-const COL = PyNULL()
-const masked_array = PyNULL()
-const pgf_backend = PyNULL()
-const pyplot_collections = PyNULL()
-const RegularPolyCollection = PyNULL()
-rcParams = 0
+const COL = PythonCall.pynew()
+const masked_array = PythonCall.pynew()
+const pgf_backend = PythonCall.pynew()
+const pyplot_collections = PythonCall.pynew()
+const RegularPolyCollection = PythonCall.pynew()
+rcParams = PythonCall.pynew()
 
 function __init__()
-    copy!(COL, pyimport_conda("matplotlib.colors", "matplotlib"))
-    copy!(masked_array, pyimport_conda("numpy.ma", "numpy"))
-    copy!(pgf_backend, pyimport_conda("matplotlib.backends.backend_pgf", "matplotlib"))
-    copy!(pyplot_collections, pyimport_conda("matplotlib.collections", "matplotlib"))
-    copy!(RegularPolyCollection, pyplot_collections.RegularPolyCollection)
+    PythonCall.pycopy!(COL, pyimport("matplotlib.colors"))
+    PythonCall.pycopy!(masked_array, pyimport("numpy.ma"))
+    PythonCall.pycopy!(pgf_backend, pyimport("matplotlib.backends.backend_pgf"))
+    PythonCall.pycopy!(pyplot_collections, pyimport("matplotlib.collections"))
+    PythonCall.pycopy!(RegularPolyCollection, pyplot_collections.RegularPolyCollection)
     global rcParams
-    rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
+    PythonCall.pycopy!(rcParams, pyplot.matplotlib.rcParams)
 end
 
 using UnicodeFun
@@ -64,7 +64,7 @@ function cfigure(fun::Function, figname;
     fig
 end
 
-function csubplot(fun::Function, ax::PyObject, args...; kwargs...)
+function csubplot(fun::Function, ax::Py, args...; kwargs...)
     sca(ax)
     fun()
     ax_common(;kwargs...)
@@ -103,19 +103,19 @@ end
 
 # ** GridSpec
 
-grid_spec(fig::PyPlot.Figure, args...; kwargs...) =
+grid_spec(fig::Figure, args...; kwargs...) =
     fig.add_gridspec(args...; kwargs...)
 
-grid_spec(gr::PyPlot.PyObject, args...; kwargs...) =
+grid_spec(gr::PythonCall.Py, args...; kwargs...) =
     gr.subgridspec(args...; kwargs...)
 
-clear_figure!(fig::PyPlot.Figure) = fig.clf()
-clear_figure!(gr::PyPlot.PyObject) =
+clear_figure!(fig::Figure) = fig.clf()
+clear_figure!(gr::PythonCall.Py) =
     clear_figure!(gr.get_gridspec().figure)
 clear_figure!(::Any) = nothing
 
-tight_layout!(fig::PyPlot.Figure) = fig.tight_layout()
-tight_layout!(gr::PyPlot.PyObject) =
+tight_layout!(fig::Figure) = fig.tight_layout()
+tight_layout!(gr::PythonCall.Py) =
     tight_layout!(gr.get_gridspec().figure)
 tight_layout!(::Any) = nothing
 
@@ -139,15 +139,15 @@ function filter_kwargs!(kwargs, sym, default=nothing)
     v
 end
 
-# Slightly ugly hack since `PyCall.size(o::PyObject)` returns the
+# Slightly ugly hack since `size(o::Py)` returns the
 # _length_ of `o`.
 
-function shape(pyobj::PyCall.PyObject)
+function shape(pyobj::Py)
     :shape ∈ keys(pyobj) ||
-        throw(ArgumentError("`:shape` not present among `PyObject`s `keys`."))
+        throw(ArgumentError("`:shape` not present among `Py`s `keys`."))
     pyobj.shape
 end
-shape(pyobj::PyCall.PyObject, i) = shape(pyobj)[i]
+shape(pyobj::Py, i) = shape(pyobj)[i]
 shape(a, args...) = size(a, args...)
 
 function plot_map(args...; kwargs...)
@@ -584,49 +584,69 @@ end
 
 mticker = matplotlib.ticker
 
-@pydef mutable struct SqrtTransform <: matplotlib.transforms.Transform
-    input_dims = 1
-    output_dims = 1
-    is_separable = true
-    has_inverse = true
-    __init__(self) = matplotlib.transforms.Transform.__init__(self)
-    transform_non_affine(self, a) = begin
-        v = similar(a)
-        sel = a .>= 0
-        v[sel] .= .√(a[sel])
-        # v[.!sel] .= NaN
-        v
-    end
-    inverted(self) = SquareTransform()
-end
+SqrtTransform = pytype("SqrtTransform", (matplotlib.transforms.Transform,), [
+    "__module__" => "__main__",
+    pyfunc(name="__init__",
+           function (self)
+               self.input_dims = 1
+               self.output_dims = 1
+               self.is_separable = true
+               self.has_inverse = true
+               matplotlib.transforms.Transform.__init__(self)
+           end),
+    pyfunc(name="transform_non_affine",
+           function(self, a)
+               b = pyconvert(Array, a)
+               v = similar(b)
+               sel = b .>= 0
+               v[sel] .= .√(b[sel])
+               # v[.!sel] .= NaN
+               v
+           end),
+    pyfunc(name="inverted",
+           (self) -> SquareTransform())
+])
 
-@pydef mutable struct SquareTransform <: matplotlib.transforms.Transform
-    input_dims = 1
-    output_dims = 1
-    is_separable = true
-    has_inverse = true
-    __init__(self) = matplotlib.transforms.Transform.__init__(self)
-    transform_non_affine(self, a) = a .^ 2
-    inverted(self) = SqrtTransform()
-end
+SquareTransform = pytype("SquareTransform", (matplotlib.transforms.Transform,), [
+    "__module__" => "__main__",
+    pyfunc(name="__init__",
+           function (self)
+               self.input_dims = 1
+               self.output_dims = 1
+               self.is_separable = true
+               self.has_inverse = true
+               matplotlib.transforms.Transform.__init__(self)
+           end),
+    pyfunc(name="transform_non_affine",
+           function(self, a)
+               pyconvert(Array, a) .^ 2
+           end),
+    pyfunc(name="inverted",
+           (self) -> SqrtTransform())
+])
 
-@pydef mutable struct SqrtScale <: matplotlib.scale.ScaleBase
-    name="sqrt"
-    __init__(self, axis, args...; kwargs...) = begin
-        matplotlib.scale.ScaleBase.__init__(axis)
-    end
-    get_transform(self) = SqrtTransform()
-    set_default_locators_and_formatters(self, axis) = nothing
-    limit_range_for_scale(self, vmin, vmax, minpos) = begin
-        max(vmin, 0), max(vmax, 0)
-    end
-end
+SqrtScale = pytype("SqrtScale", (matplotlib.scale.ScaleBase,), [
+    "__module__" => "__main__",
+    "name" => "sqrt",
+    pyfunc(name="__init__",
+           function(self, axis, args...; kwargs...)
+               matplotlib.scale.ScaleBase.__init__(self, axis)
+           end),
+    pyfunc(name="get_transform",
+           (self) -> SqrtTransform()),
+    pyfunc(name="set_default_locators_and_formatters",
+           (self, axis) -> nothing),
+    pyfunc(name="limit_range_for_scale",
+           function(self, vmin, vmax, minpos)
+               max(vmin, 0), max(vmax, 0)
+           end)])
 
+# https://github.com/cjdoris/PythonCall.jl/issues/289
 matplotlib.scale.register_scale(SqrtScale)
 
 # * Misc
 
-pyslice(args...) = pycall(pybuiltin("slice"), PyObject, args...)
+# pyslice(args...) = pycall(pybuiltin("slice"), Py, args...)
 
 function savefig_f(filename, args...; kwargs...)
     savefig(filename, args...; kwargs...)
@@ -664,7 +684,8 @@ export plot_style,
     latex, latex_base10, base10,
     axis_add_ticks, set_ticklabel_props, π_frac_string, π_labels, frac_ticks, sci_ticks, colorbar_sci_ticks,
     square_axs, axes_labels_opposite, no_tick_labels,
-    pyslice, savefig_f, reltext, disp,
+    # pyslice,
+    savefig_f, reltext, disp,
     GridSpec, next_color
 
 end
