@@ -26,9 +26,9 @@ end
 
 function (cmap::PythonPlot.ColorMap)(i::Int)
     if :colors in propertynames(cmap)
-        vec(cmap.colors[i,:])
+        pyconvert(Vector, cmap.colors[i])
     else
-        pycall(cmap, PyAny, i)
+        pycall(cmap, PyAny, i) # This is probably wrong
     end
 end
 
@@ -41,8 +41,9 @@ function lerp(a::Tuple, b::Tuple, t)
 end
 
 function (cmap::PythonPlot.ColorMap)(f::Real)
-    i = clamp(1+f*(cmap.N-1),1,cmap.N)
-    fl,ce = floor(Integer,i), ceil(Integer, i)
+    N = pyconvert(Int, cmap.N)
+    i = clamp(f*(N-1),0,N-1)
+    fl,ce = floor(Int,i), ceil(Int, i)
     lerp(cmap(fl),cmap(ce),f)
 end
 

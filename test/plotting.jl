@@ -62,4 +62,18 @@ using Jagot.plotting
             plot_matrix(A)
         end
     end
+
+    @testset "Colormaps" begin
+        cmap = get_cmap("viridis")
+        @test cmap(0.0) ≈ [0.267004, 0.004874, 0.329415]
+        @test cmap(0.5) ≈ [0.1281485, 0.565107, 0.5508925]
+        @test cmap(1.0) ≈ [0.993248, 0.906157, 0.143936]
+
+        @test cmap(000) ≈ [0.267004, 0.004874, 0.329415]
+        @test cmap(255) ≈ [0.993248, 0.906157, 0.143936]
+
+        @test cmap(1, 7) ≈ [0.267004, 0.004874, 0.329415]
+        @test cmap(4, 7) ≈ [0.1281485, 0.565107, 0.5508925]
+        @test cmap(7, 7) ≈ [0.993248, 0.906157, 0.143936]
+    end
 end
