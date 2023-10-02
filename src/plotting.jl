@@ -585,67 +585,67 @@ end
 
 # ** Sqrt axes
 
-mticker = matplotlib.ticker
+# mticker = matplotlib.ticker
 
-SqrtTransform = pytype("SqrtTransform", (matplotlib.transforms.Transform,), [
-    "__module__" => "__main__",
-    pyfunc(name="__init__",
-           function (self)
-               self.input_dims = 1
-               self.output_dims = 1
-               self.is_separable = true
-               self.has_inverse = true
-               matplotlib.transforms.Transform.__init__(self)
-           end),
-    pyfunc(name="transform_non_affine",
-           function(self, a)
-               b = pyconvert(Array, a)
-               v = similar(b)
-               sel = b .>= 0
-               v[sel] .= .√(b[sel])
-               # v[.!sel] .= NaN
-               v
-           end),
-    pyfunc(name="inverted",
-           (self) -> SquareTransform())
-])
+# SqrtTransform = pytype("SqrtTransform", (matplotlib.transforms.Transform,), [
+#     "__module__" => "__main__",
+#     pyfunc(name="__init__",
+#            function (self)
+#                self.input_dims = 1
+#                self.output_dims = 1
+#                self.is_separable = true
+#                self.has_inverse = true
+#                matplotlib.transforms.Transform.__init__(self)
+#            end),
+#     pyfunc(name="transform_non_affine",
+#            function(self, a)
+#                b = pyconvert(Array, a)
+#                v = similar(b)
+#                sel = b .>= 0
+#                v[sel] .= .√(b[sel])
+#                # v[.!sel] .= NaN
+#                v
+#            end),
+#     pyfunc(name="inverted",
+#            (self) -> SquareTransform())
+# ])
 
-SquareTransform = pytype("SquareTransform", (matplotlib.transforms.Transform,), [
-    "__module__" => "__main__",
-    pyfunc(name="__init__",
-           function (self)
-               self.input_dims = 1
-               self.output_dims = 1
-               self.is_separable = true
-               self.has_inverse = true
-               matplotlib.transforms.Transform.__init__(self)
-           end),
-    pyfunc(name="transform_non_affine",
-           function(self, a)
-               pyconvert(Array, a) .^ 2
-           end),
-    pyfunc(name="inverted",
-           (self) -> SqrtTransform())
-])
+# SquareTransform = pytype("SquareTransform", (matplotlib.transforms.Transform,), [
+#     "__module__" => "__main__",
+#     pyfunc(name="__init__",
+#            function (self)
+#                self.input_dims = 1
+#                self.output_dims = 1
+#                self.is_separable = true
+#                self.has_inverse = true
+#                matplotlib.transforms.Transform.__init__(self)
+#            end),
+#     pyfunc(name="transform_non_affine",
+#            function(self, a)
+#                pyconvert(Array, a) .^ 2
+#            end),
+#     pyfunc(name="inverted",
+#            (self) -> SqrtTransform())
+# ])
 
-SqrtScale = pytype("SqrtScale", (matplotlib.scale.ScaleBase,), [
-    "__module__" => "__main__",
-    "name" => "sqrt",
-    pyfunc(name="__init__",
-           function(self, axis, args...; kwargs...)
-               matplotlib.scale.ScaleBase.__init__(self, axis)
-           end),
-    pyfunc(name="get_transform",
-           (self) -> SqrtTransform()),
-    pyfunc(name="set_default_locators_and_formatters",
-           (self, axis) -> nothing),
-    pyfunc(name="limit_range_for_scale",
-           function(self, vmin, vmax, minpos)
-               max(vmin, 0), max(vmax, 0)
-           end)])
+# SqrtScale = pytype("SqrtScale", (matplotlib.scale.ScaleBase,), [
+#     "__module__" => "__main__",
+#     "name" => "sqrt",
+#     pyfunc(name="__init__",
+#            function(self, axis, args...; kwargs...)
+#                matplotlib.scale.ScaleBase.__init__(self, axis)
+#            end),
+#     pyfunc(name="get_transform",
+#            (self) -> SqrtTransform()),
+#     pyfunc(name="set_default_locators_and_formatters",
+#            (self, axis) -> nothing),
+#     pyfunc(name="limit_range_for_scale",
+#            function(self, vmin, vmax, minpos)
+#                max(vmin, 0), max(vmax, 0)
+#            end)])
 
-# https://github.com/cjdoris/PythonCall.jl/issues/289
-matplotlib.scale.register_scale(SqrtScale)
+# # https://github.com/cjdoris/PythonCall.jl/issues/289
+# matplotlib.scale.register_scale(SqrtScale)
 
 # * Misc
 
@@ -663,7 +663,7 @@ function disp()
     println()
 end
 
-GridSpec = matplotlib.gridspec.GridSpec
+# GridSpec = matplotlib.gridspec.GridSpec
 
 # https://stackoverflow.com/a/51207905/1079038
 function next_color(ax=gca())
@@ -692,6 +692,7 @@ export plot_style,
     square_axs, axes_labels_opposite, no_tick_labels,
     # pyslice,
     savefig_f, reltext, disp,
-    GridSpec, next_color
+    # GridSpec, 
+    next_color
 
 end
