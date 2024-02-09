@@ -671,6 +671,15 @@ function next_color(ax=gca())
     first(pc)["color"]
 end
 
+neutral_color() = matplotlib.rcParams["axes.edgecolor"]
+
+for (f,ff) in ((:hline,:axhline), (:vline,:axvline))
+    @eval begin
+        $f(args...; kwargs...) =
+            $ff(args...; color=neutral_color(), linewidth=1.0, linestyle="--", kwargs...)
+    end
+end
+
 # * ICC support
 include("save_pgf_with_icc.jl")
 
@@ -693,6 +702,6 @@ export plot_style,
     # pyslice,
     savefig_f, reltext, disp,
     # GridSpec, 
-    next_color
+    next_color, hline, vline
 
 end
